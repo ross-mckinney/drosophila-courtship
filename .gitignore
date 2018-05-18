@@ -5,7 +5,8 @@ __pycache__/
 
 # Visual Studio
 /.vs
-.pyproj
+*.pyproj
+*.sln
 
 # MacOS
 .DS_Store
