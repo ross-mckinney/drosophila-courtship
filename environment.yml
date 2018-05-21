@@ -1,0 +1,16 @@
+name: courtship
+dependencies:
+    - alabaster
+    - matplotlib
+    - numpy
+    - pandas
+    - pyqt=4.11.*
+    - pytz
+    - scikit-image
+    - scikit-learn
+    - scipy
+    - sphinx
+    - sphinxcontrib
+    - pip:
+        - motmot.FlyMovieFormat
+        - pycircstat
