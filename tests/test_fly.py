@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
+
 import os
-import sys
-import logging
 import unittest
+
 import numpy as np
 import pandas as pd
+
 from context import fly
+from context import behavior
 
 
 class TestPoint(unittest.TestCase):
+    """Tests functions held within Point class."""
     def test_coords(self):
-        p = fly.Point()
+        """Assure call to Point.coords() returns correct, [N,2] array."""
+        test_point = fly.Point()
 
-        p.row = np.arange(5)         # [0, 1, 2, 3, 4]
-        p.col = np.arange(5)[::-1]   # [4, 3, 2, 1, 0]
+        test_point.row = np.arange(5)         # [0, 1, 2, 3, 4]
+        test_point.col = np.arange(5)[::-1]   # [4, 3, 2, 1, 0]
 
         assert_eq_arr = np.array([
             [0, 4],
@@ -23,49 +27,58 @@ class TestPoint(unittest.TestCase):
             [4, 0]
         ])
 
-        c = p.coords()
-        np.testing.assert_array_equal(c, assert_eq_arr)
+        test_coords = test_point.coords()
+        np.testing.assert_array_equal(test_coords, assert_eq_arr)
 
 
 class TestEllipseInit(unittest.TestCase):
+    """Tests functions assocaited with initialization of Ellipse objects."""
     def test_init_params(self):
+        """Assure call to Ellipse.init_params() allocates appropriate space
+        for all parameters."""
         size = 10
-        e = fly.Ellipse()
-        e.init_params(size)
+        test_ellipse = fly.Ellipse()
+        test_ellipse.init_params(size)
 
-        self.assertEqual(e.centroid.row.size, size)
-        self.assertEqual(e.centroid.col.size, size)
-        self.assertEqual(e.major_axis_length.size, size)
-        self.assertEqual(e.minor_axis_length.size, size)
-        self.assertEqual(e.orientation.size, size)
+        self.assertEqual(test_ellipse.centroid.row.size, size)
+        self.assertEqual(test_ellipse.centroid.col.size, size)
+        self.assertEqual(test_ellipse.major_axis_length.size, size)
+        self.assertEqual(test_ellipse.minor_axis_length.size, size)
+        self.assertEqual(test_ellipse.orientation.size, size)
 
 class TestBodyInit(unittest.TestCase):
+    """Tests functions associated with initialization of Body objects."""
     def test_init_params(self):
+        """Assure call to Body.init_params() allocates appropriate space
+        for all parameters"""
         size = 10
-        b = fly.Body()
-        b.init_params(size)
+        fly_body = fly.Body()
+        fly_body.init_params(size)
 
-        self.assertEqual(b.centroid.row.size, size)
-        self.assertEqual(b.centroid.col.size, size)
-        self.assertEqual(b.major_axis_length.size, size)
-        self.assertEqual(b.minor_axis_length.size, size)
-        self.assertEqual(b.orientation.size, size)
-        self.assertEqual(b.rotation_angle.size, size)
-        self.assertEqual(b.head.row.size, size)
-        self.assertEqual(b.head.col.size, size)
-        self.assertEqual(b.rear.row.size, size)
-        self.assertEqual(b.rear.col.size, size)
+        self.assertEqual(fly_body.centroid.row.size, size)
+        self.assertEqual(fly_body.centroid.col.size, size)
+        self.assertEqual(fly_body.major_axis_length.size, size)
+        self.assertEqual(fly_body.minor_axis_length.size, size)
+        self.assertEqual(fly_body.orientation.size, size)
+        self.assertEqual(fly_body.rotation_angle.size, size)
+        self.assertEqual(fly_body.head.row.size, size)
+        self.assertEqual(fly_body.head.col.size, size)
+        self.assertEqual(fly_body.rear.row.size, size)
+        self.assertEqual(fly_body.rear.col.size, size)
 
 
 class TestFlyInit(unittest.TestCase):
+    """Tests functions associated with initialization of Fly objects."""
     def test_init_params(self):
+        """Assure call to Fly.init_params() allocates appropriate space for
+        all parameters."""
         size = 10
-        f = fly.Fly()
-        f.init_params(size)
+        test_fly = fly.Fly()
+        test_fly.init_params(size)
 
         attributes = ['body', 'left_wing', 'right_wing']
         for attribute in attributes:
-            attr = getattr(f, attribute)
+            attr = getattr(test_fly, attribute)
 
             self.assertEqual(attr.centroid.row.size, size)
             self.assertEqual(attr.centroid.col.size, size)
@@ -82,38 +95,42 @@ class TestFlyInit(unittest.TestCase):
 
 
 class TestFlyIO(unittest.TestCase):
+    """Tests functions associated with loading and saving Fly objects."""
     def setUp(self):
-        self.size = 10
-        self.fly = fly.Fly()
-        self.fly.init_params(self.size)
-
+        """Define col_names to be used in subsequent tests."""
         self.col_names = [
-           'body_centroid_col',
-           'body_centroid_row',
-           'body_head_col',
-           'body_head_row',
-           'body_major_axis_length',
-           'body_minor_axis_length',
-           'body_orientation',
-           'body_rear_col',
-           'body_rear_row',
-           'body_rotation_angle',
-           'left_centroid_col',
-           'left_centroid_row',
-           'left_major_axis_length',
-           'left_minor_axis_length',
-           'left_orientation',
-           'right_centroid_col',
-           'right_centroid_row',
-           'right_major_axis_length',
-           'right_minor_axis_length',
-           'right_orientation'
+            'body_centroid_col',
+            'body_centroid_row',
+            'body_head_col',
+            'body_head_row',
+            'body_major_axis_length',
+            'body_minor_axis_length',
+            'body_orientation',
+            'body_rear_col',
+            'body_rear_row',
+            'body_rotation_angle',
+            'left_centroid_col',
+            'left_centroid_row',
+            'left_major_axis_length',
+            'left_minor_axis_length',
+            'left_orientation',
+            'right_centroid_col',
+            'right_centroid_row',
+            'right_major_axis_length',
+            'right_minor_axis_length',
+            'right_orientation'
         ]
-    
-    def test_to_csv(self):
+
+    def test_to_csv_no_behaviors(self):
+        """Assure Fly.to_csv() works when no behaviors are associated with
+        a fly."""
+        size = 10
+        test_fly = fly.Fly()
+        test_fly.init_params(size)
+
         # save fly as a .csv file.
         savename = '_temp_test_fly.csv'
-        self.fly.to_csv(savename)
+        test_fly.to_csv(savename)
 
         # re-load this file, and check that the column names are as
         # expected.
@@ -122,14 +139,56 @@ class TestFlyIO(unittest.TestCase):
         np.testing.assert_array_equal(self.col_names, df_col_names)
 
         # also make sure the saved df is the expected shape
-        self.assertEqual(self.size * len(self.col_names), fly_df.size)
+        self.assertEqual(size * len(self.col_names), fly_df.size)
 
         # finally, get rid of the file we just created.
         os.remove(savename)
 
-    def test_from_csv(self):
-        filename = 'data/test-fly-01.csv'
+    def test_to_csv_behaviors(self):
+        """Assure Fly.to_csv() works when behaviors are associated with
+        a fly."""
+        size = 10
+        test_fly = fly.Fly()
+        test_fly.init_params(size)
+
+        behavior_1 = behavior.Behavior('b1', size, [2, 8], [4, 9])
+        behavior_2 = behavior.Behavior('b2', size, [0, 5], [3, 8])
+
+        test_fly.behaviors = [behavior_1, behavior_2]
+
+        col_names = self.col_names +  ['behavior_b1', 'behavior_b2']
+
+        savename = '_temp_test_fly.csv'
+        test_fly.to_csv(savename)
+
+        fly_df = pd.read_csv(savename)
+        df_col_names = fly_df.columns.values
+        np.testing.assert_array_equal(col_names, df_col_names)
+
+        self.assertEqual(size * len(col_names), fly_df.size)
+        os.remove(savename)
+
+    def test_from_csv_no_behaviors(self):
+        """Assure that Fly.from_csv() works when loading Fly data with no
+        assocaited behaviors."""
+        # this file contains a fly initilized to contain 20 frames (rows).
+        # the data in the file is an eye-matrix with shape [20, 20].
+        filename = 'data/test-fly-no-behaviors-01.csv'
         test_fly = fly.Fly().from_csv(filename)
+        test_fly_df = test_fly.to_df()
+        np.testing.assert_array_equal(test_fly_df.values, np.eye(20))
+
+    def test_from_csv_behaviors(self):
+        """Assure that Fly.from_csv() works when loading Fly data with
+        assocaited behaviors."""
+        # this file contains a fly initialized to contain 22 frames (rows).
+        # it contains two behaviors called 'b1' and 'b2'; and the
+        # data in the file is an eye-matrix with shape [22, 22].
+        filename = 'data/test-fly-behaviors-01.csv'
+        test_fly = fly.Fly().from_csv(filename)
+        test_fly_df = test_fly.to_df()
+        np.testing.assert_array_equal(test_fly_df.values, np.eye(22))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
