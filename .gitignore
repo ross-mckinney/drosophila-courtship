@@ -5,6 +5,7 @@ __pycache__/
 
 # Visual Studio
 /.vs
+/.vscode
 *.pyproj
 *.sln
 
