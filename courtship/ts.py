@@ -37,49 +37,14 @@ class TrackingSummary(object):
 
     Attributes
     ----------
-    video_file : string or None (default=None)
-        Path to video from which objects were tracked.
+    video : VideoMeta
 
-    fps : float or None (default=None)
-        Frames per second within tracked video.
+    arena : ArenaMeta
 
-    start_time : string or None (default=None)
-        Datetime at which video recording was started.
-
-    end_time : string or None (default=None)
-        Datetime at which video recording was ended.
-
-    arena_type : string or None (default=None)
-        String describing the type of arena used in video.
-
-    pixels_per_mm : int or None (default=None)
-        Conversion factor so we know the absolute size of things in the video.
+    software : SoftwareMeta
 
     group : string or None (default=None)
         String denoting to which group tracked objects belong.
-
-    tight_threshold : int or None (default=None)
-        Tight threshold used to locate object in video.
-
-    loose_threshold : int or None (default=None)
-        Loose threshold used to locate object in video.
-
-    date_tracked : string or None (default=None)
-        Datetime at which tracking of video took place
-        (this is tracking, not recording)
-
-    tracking_software : string or None (default=None)
-        String containing version of software used for tracking.
-
-    arena_size_mm : int or None (default=None)
-        Size of arena. Diameter if circular.
-
-    behaviors : dictionary (default={})
-        Dictionary containing any behaviors observed within tracked video.
-        This should be used to store behaviors determined using classifiers.
-        Each key should be a string describing the behavior, and
-        each value should be a binary, 1D array stating whether or
-        not that behavior was observed in a each frame.
     """
     def __init__(self):
         self.video_file = None
