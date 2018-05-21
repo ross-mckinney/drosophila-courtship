@@ -9,6 +9,8 @@
 import numpy as np
 import pandas as pd
 
+from . import behavior
+
 
 class Point(object):
     """Stores 2D coordinates as attributes.
@@ -27,7 +29,7 @@ class Point(object):
 
     def coords(self):
         """Stacks row and col coordinates into an [N, 2] np.ndarray.
-        
+
         Returns
         -------
         coords : np.ndarray of shape [N, 2].
@@ -61,7 +63,7 @@ class Ellipse(object):
         self.minor_axis_length = None
         self.orientation = None
 
-    def init_params(self, n):
+    def init_params(self, size):
         """Initilizes space to hold ellipse data.
 
         All parameters will be initilized as np.zeros(n).
@@ -71,15 +73,15 @@ class Ellipse(object):
 
         Parameters
         ----------
-        n : int
+        size : int
             Length of array to initilize for all parameters.
         """
         for key in self.__dict__.keys():
             if isinstance(self.__dict__[key], Point):
-                self.__dict__[key].row = np.zeros(n)
-                self.__dict__[key].col = np.zeros(n)
+                self.__dict__[key].row = np.zeros(size)
+                self.__dict__[key].col = np.zeros(size)
             else:
-                self.__dict__[key] = np.zeros(n)
+                self.__dict__[key] = np.zeros(size)
 
     def _dig(self, d, all_params):
         """Recursively digs into objects/dictionaries to return all parameters.
@@ -93,28 +95,29 @@ class Ellipse(object):
             Initialize as empty. This will be the final dictionary containing
             all parameters.
         """
-        for k, v in d.iteritems():
-            if isinstance(v, Point):
-                all_params[k] = self._dig(v.__dict__, dict())
+        for key, val in d.iteritems():
+            if isinstance(val, Point):
+                all_params[key] = self._dig(val.__dict__, dict())
             else:
-                all_params[k] = v
+                all_params[key] = val
 
         return all_params
 
-    def _combine_keys(self, k, d):
-        """Adds string, k, to all keys within dictionary, d.
+    @staticmethod
+    def _combine_keys(key_string, add_to_dict):
+        """Adds string, key_string, to all keys within a dictionary.
 
         Parameters
         ----------
-        k : string
+        key_string : string
             String to add to all keys within d.
-        d : dictionary
+        add_to_dict : dictionary
             Dicitionary
         """
-        nd = dict()
-        for key, val in d.iteritems():
-            nd[k + '_' + key] = val
-        return nd
+        updated_dict = dict()
+        for key, val in add_to_dict.iteritems():
+            updated_dict[key_string + '_' + key] = val
+        return updated_dict
 
     def get_params(self, return_dict=True):
         """Gets all parameters as a dictionary.
@@ -138,7 +141,7 @@ class Ellipse(object):
                     df[k2] = v2
 
         # return DataFrame where columns have been sorted alphabetically.
-        return df.reindex(sorted(df.columns), axis=1)
+        return df.reindex_axis(sorted(df.columns), axis=1)
 
 
 class Body(Ellipse):
@@ -183,6 +186,9 @@ class Fly(object):
 
     right_wing : Wing object
         Ellipse fitted to right wing of fly.
+
+    behaviors : list of Behavior
+        All behaviors that the fly engaged in during tracking.
     """
     def __init__(self):
         """A fly is composed of three ellipses fitted to (1) the body,
@@ -191,8 +197,9 @@ class Fly(object):
         self.body = Body()
         self.right_wing = Wing()
         self.left_wing = Wing()
+        self.behaviors = []
 
-    def init_params(self, n):
+    def init_params(self, size):
         """Initilizes space for all parameters.
 
         .. warning:: Any values held within an attribute will
@@ -206,9 +213,9 @@ class Fly(object):
             following parameters:
                 body, left_wing and right_wing.
         """
-        self.body.init_params(n)
-        self.left_wing.init_params(n)
-        self.right_wing.init_params(n)
+        self.body.init_params(size)
+        self.left_wing.init_params(size)
+        self.right_wing.init_params(size)
 
     def from_csv(self, csv_file):
         """Allows the creation of a Fly from a csv file.
@@ -220,18 +227,18 @@ class Fly(object):
         csv_file : string
             Path to file containing fly data.
         """
-        df = pd.read_csv(csv_file)
-        fly = self.from_df(df)
+        fly_df = pd.read_csv(csv_file)
+        fly = self.from_df(fly_df)
         return fly
 
     @classmethod
-    def from_df(cls, df):
+    def from_df(cls, fly_df):
         """Generates a fly object from a dataframe.
 
         Parameters
         ----------
-        df : pandas.DataFrame object
-            DataFrameta_dict.update()me from which to generate Fly object.
+        fly_df : pandas.DataFrame object
+            DataFrameme from which to generate Fly object.
 
         Returns
         -------
@@ -240,7 +247,7 @@ class Fly(object):
         """
         fly = cls()
 
-        for colname in df.columns.values.tolist():
+        for colname in fly_df.columns.values.tolist():
             col_id = colname.split('_')
 
             if col_id[0] == 'body':
@@ -248,49 +255,59 @@ class Fly(object):
                     setattr(
                         fly.body,
                         '_'.join(col_id[1:]),
-                        df[colname].values
+                        fly_df[colname].values
                     )
                 else:
                     if 'centroid' in col_id:
                         setattr(
                             fly.body.centroid,
                             col_id[-1],
-                            df[colname].values
+                            fly_df[colname].values
                         )
                     elif col_id[1] == 'head':
                         setattr(
                             fly.body.head,
                             col_id[-1],
-                            df[colname].values
+                            fly_df[colname].values
                         )
                     else:
-                        setattr(fly.body.rear, col_id[-1], df[colname].values)
+                        setattr(
+                            fly.body.rear,
+                            col_id[-1],
+                            fly_df[colname].values
+                            )
             elif col_id[0] == 'left':
                 if 'row' not in col_id[-1] and 'col' not in col_id[-1]:
                     setattr(
                         fly.left_wing,
                         '_'.join(col_id[1:]),
-                        df[colname].values
+                        fly_df[colname].values
                     )
                 else:
                     setattr(
                         fly.left_wing.centroid,
                         col_id[-1],
-                        df[colname].values
+                        fly_df[colname].values
                     )
             elif col_id[0] == 'right':
                 if 'row' not in col_id and 'col' not in col_id:
                     setattr(
                         fly.right_wing,
                         '_'.join(col_id[1:]),
-                        df[colname].values
+                        fly_df[colname].values
                     )
                 else:
                     setattr(
                         fly.right_wing.centroid,
                         col_id[-1],
-                        df[colname].values
+                        fly_df[colname].values
                     )
+            elif col_id[0] == 'behavior':
+                behavior_name = '_'.join(col_id[1:])
+                new_behavior = behavior.array_to_behavior(
+                    behavior_name,
+                    fly_df[colname].values)
+                fly.behaviors.append(new_behavior)
 
         return fly
 
@@ -302,9 +319,8 @@ class Fly(object):
         csv_file : string
             File path to save Fly.
         """
-
-        df = self.to_df()
-        df.to_csv(csv_file, index=False)
+        fly_df = self.to_df()
+        fly_df.to_csv(csv_file, index=False)
 
     def to_df(self):
         """Returns a pandas.DataFrame object containing all information
@@ -331,9 +347,15 @@ class Fly(object):
            18. right_major_axis_length
            19. right_minor_axis_length
            20. right_orientation
+           21. behavior_<behavior_1_name> (optional)
+                        .
+                        .
+                        .
 
            These names correspond to the ellipse fitted to the body,
-           left wing, and right wing of the fly.
+           left wing, and right wing of the fly. Columns 21 and on should
+           represent behaviors associated with this fly object. They are
+           optional.
 
         Returns
         -------
@@ -356,7 +378,16 @@ class Fly(object):
             'right_' + c_name for c_name in right_wing_params.columns.values
         ]
 
-        df = pd.concat([
-            body_params, left_wing_params, right_wing_params], axis=1)
+        to_concat = [body_params, left_wing_params, right_wing_params]
 
-        return df
+        if len(self.behaviors) != 0:
+            behaviors_df = pd.DataFrame()
+            for fly_behavior in self.behaviors:
+                b_arr = fly_behavior.as_array()
+                b_name = 'behavior_' + fly_behavior.name
+                behaviors_df[b_name] = b_arr
+            to_concat.append(behaviors_df)
+
+        fly_df = pd.concat(to_concat, axis=1)
+
+        return fly_df
