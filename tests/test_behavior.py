@@ -10,7 +10,7 @@ class TestBehavior(unittest.TestCase):
     def test_init1(self):
         """Assures attributes are set given an normal initialization."""
         behav1 = behavior.Behavior('behavior_1', 100, [50, 70], [60, 80])
-        
+
         np.testing.assert_array_equal(behav1.start_ixs, np.array([50, 70]))
         np.testing.assert_array_equal(behav1.stop_ixs, np.array([60, 80]))
         self.assertEqual(behav1.name, 'behavior_1')
@@ -40,7 +40,7 @@ class TestBehavior(unittest.TestCase):
         """Assures a Behavior can be generated from a passed binary array."""
         arr = np.array([0, 0, 0, 1, 1, 1, 0, 0, 0])
         behav = behavior.Behavior.from_array('behavior1', arr)
-        
+
         np.testing.assert_array_equal(behav.start_ixs, [3])
         np.testing.assert_array_equal(behav.stop_ixs, [6])
         self.assertEqual(behav.name, 'behavior1')
@@ -133,14 +133,41 @@ class TestBehavior(unittest.TestCase):
         self.assertEqual(behav.index(mode='all'), 0)
         self.assertEqual(behav.index(mode='condensed'), 0)
 
-    def test_latency(self):
-        pass
+    def test_latency1(self):
+        """Assures that Behavior.latency() works with bouts."""
+        behav = behavior.Behavior('b', 10, [5], [10])
+        self.assertEqual(behav.latency(), 5)
 
-    def test_bout_num(self):
-        pass
+    def test_latency2(self):
+        """Assures that Behavior.latency() works with no bouts."""
+        behav = behavior.Behavior('b', 10, [], [])
+        self.assertEqual(behav.latency(), 10)
 
-    def test_bout_durations(self):
-        pass
+    def test_bout_num1(self):
+        """Assures that Behavior.bout_num() works with bouts."""
+        behav1 = behavior.Behavior('b1', 10, [5], [10])
+        self.assertEqual(behav1.bout_num(), 1)
+
+        behav2 = behavior.Behavior('b2', 10, [2, 6, 8], [3, 7, 10])
+        self.assertEqual(behav2.bout_num(), 3)
+
+    def test_bout_num2(self):
+        """Assures that Behavior.bout_num() works with no bouts."""
+        behav1 = behavior.Behavior('b1', 10, [], [])
+        self.assertEqual(behav1.bout_num(), 0)
+
+    def test_bout_durations1(self):
+        """Assures that Behavior.bout_durations() works with bouts."""
+        behav1 = behavior.Behavior('b1', 10, [5], [10])
+        np.testing.assert_array_equal(behav1.bout_durations(), [5])
+
+        behav2 = behavior.Behavior('b2', 10, [2, 6, 8], [3, 7, 10])
+        np.testing.assert_array_equal(behav2.bout_durations(), [1, 1, 2])
+
+    def test_bout_durations2(self):
+        """Assures that Behavior.bout_durations() works with no bouts."""
+        behav1 = behavior.Behavior('b1', 10, [], [])
+        np.testing.assert_array_equal(behav1.bout_durations(), [])
 
 
 if __name__ == '__main__':
