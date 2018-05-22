@@ -170,24 +170,35 @@ class TestFlyIO(unittest.TestCase):
 
     def test_from_csv_no_behaviors(self):
         """Assure that Fly.from_csv() works when loading Fly data with no
-        assocaited behaviors."""
+        associated behaviors."""
         # this file contains a fly initilized to contain 20 frames (rows).
         # the data in the file is an eye-matrix with shape [20, 20].
         filename = 'data/test-fly-no-behaviors-01.csv'
         test_fly = fly.Fly().from_csv(filename)
         test_fly_df = test_fly.to_df()
+
         np.testing.assert_array_equal(test_fly_df.values, np.eye(20))
 
     def test_from_csv_behaviors(self):
         """Assure that Fly.from_csv() works when loading Fly data with
-        assocaited behaviors."""
+        associated behaviors."""
         # this file contains a fly initialized to contain 22 frames (rows).
         # it contains two behaviors called 'b1' and 'b2'; and the
         # data in the file is an eye-matrix with shape [22, 22].
         filename = 'data/test-fly-behaviors-01.csv'
         test_fly = fly.Fly().from_csv(filename)
         test_fly_df = test_fly.to_df()
+
         np.testing.assert_array_equal(test_fly_df.values, np.eye(22))
+
+        b1_expected = np.zeros(22)
+        b2_expected = np.zeros(22)
+        b1_expected[-2] = 1
+        b2_expected[-1] = 1
+        np.testing.assert_array_equal(
+            b1_expected, test_fly.behaviors[0].as_array())
+        np.testing.assert_array_equal(
+            b2_expected, test_fly.behaviors[1].as_array())
 
 
 if __name__ == '__main__':
