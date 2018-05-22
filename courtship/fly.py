@@ -341,7 +341,7 @@ class Fly(object):
                     )
             elif col_id[0] == 'behavior':
                 behavior_name = '_'.join(col_id[1:])
-                new_behavior = behavior.array_to_behavior(
+                new_behavior = behavior.Behavior.from_array(
                     behavior_name,
                     fly_df[colname].values)
                 fly.behaviors.append(new_behavior)
