@@ -3,7 +3,8 @@ import numpy as np
 
 
 class Behavior(object):
-    """Behavior container.
+    """Class containing behavioral events occuring throughout a video/courtship
+    trial.
 
     Parameters
     ----------
@@ -120,6 +121,11 @@ class Behavior(object):
         index : float
             Fraction of time spent engaging in this behavior.
 
+        Raises
+        ------
+        AttributeError
+            If `mode` is not either 'all' or 'condensed'.
+
         Examples
         --------
         >>> behav = Behavior('b1', 100, [20, 80], [40, 100])
@@ -185,34 +191,45 @@ class Behavior(object):
         Examples
         --------
         >>> behav = Behavior('b1', 100, [20, 80], [40, 100])
-        >>> behav.ixs()    # np.array([[20, 40], [80, 100]])
+        >>> behav.ixs()
+        np.array([[20, 40], [80, 100]])
         """
         return np.vstack((self.start_ixs, self.stop_ixs)).T
 
+    def bout_num(self):
+        """Finds the number of bouts contained within this Behavior.
+        
+        A bout is defined as an uninterrupted sequence of behavioral events.
+        
+        Returns
+        -------
+        int
+            Number of bouts of behavior.
 
-def array_to_behavior(behavior_name, behavior_arr):
-    """Converts a binary array to a Behavior.
+        Examples
+        --------
+        >>> arr = np.array([0, 0, 1, 1, 1, 0, 0, 1, 1])
+        >>> behav = Behavior().from_array('b1', arr)
+        >>> behav.bout_num()
+        2
+        """
+        return self.start_ixs.size
 
-    Parameters
-    ----------
-    behavior_name : string
-        Name of beahvior.
+    def bout_durations(self):
+        """Finds the duration of each bout of behavior.
 
-    behavior_arr : array-like
-       Binary array to convert to Behavior.
+        Returns
+        -------
+        durations : np.ndarray of shape [num_bouts]
+            Each entry in the array is the duration of that bout of behavior.
 
-    Returns
-    -------
-    new_behavior : Behavior
-        New behavior with given name.
-    """
-    behavior_arr = np.asarray(behavior_arr)
-    boundaries = bout_boundaries(behavior_arr)
-    return Behavior(
-        behavior_name,
-        behavior_arr.size,
-        boundaries[:, 0],
-        boundaries[:, 1])
+        Examples
+        --------
+        >>> behav = Behavior('b1', 100, [20, 60, 80], [30, 70, 90])
+        >>> behav.bout_durations()
+        np.array([10, 10, 10])
+        """
+        return np.diff(self.ixs(), axis=1).flatten()
 
 
 def bout_boundaries(arr):
@@ -232,8 +249,14 @@ def bout_boundaries(arr):
 
     Examples
     --------
-    >>> arr = np.ndarray([0, 0, 1, 1, 1, 1, 1, 0, 0, 0])
-    >>> boundaries(arr) #returns np.ndarray([2, 7])
+    >>> arr = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0, 0])
+    >>> bout_boundaries(arr)
+    np.array([[2, 7]])
+
+    >>> arr = np.array([0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1])
+    >>> bout_boundaries(arr)
+    np.array([[2, 7],
+              [9, 12]])
     """
     arr = np.asarray(arr)
     arr = np.hstack((0, arr, 0))  # pad arr with zeros to ensure below works.
