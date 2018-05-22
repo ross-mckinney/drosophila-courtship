@@ -201,5 +201,33 @@ class TestFlyIO(unittest.TestCase):
             b2_expected, test_fly.behaviors[1].as_array())
 
 
+class TestFlyBehaviorFunctions(unittest.TestCase):
+    """Tests functions related to getting behvaiors from Fly."""
+    def test_get_behavior1(self):
+        """Assures that fly.get_behavior() works with valid behavior name."""
+        filename = 'data/test-fly-behaviors-01.csv'
+        test_fly = fly.Fly().from_csv(filename)
+
+        behav1 = test_fly.get_behavior('b1')
+        behav2 = test_fly.get_behavior('b2')
+        self.assertEqual(behav1.name, 'b1')
+        self.assertEqual(behav2.name, 'b2')
+
+    def test_get_behavior2(self):
+        """Assures that fly.get_behavior() raises Error with invalid name."""
+        filename = 'data/test-fly-behaviors-01.csv'
+        test_fly = fly.Fly().from_csv(filename)
+
+        with self.assertRaises(AttributeError):
+            test_fly.get_behavior('wrongkey')
+
+    def test_list_behaviors(self):
+        """Assures that fly.list_behaviors() works with valid behaviors."""
+        filename = 'data/test-fly-behaviors-01.csv'
+        test_fly = fly.Fly().from_csv(filename)
+
+        np.testing.assert_array_equal(test_fly.list_behaviors(), ['b1', 'b2'])
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
