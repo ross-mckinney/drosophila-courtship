@@ -217,6 +217,43 @@ class Fly(object):
         self.left_wing.init_params(size)
         self.right_wing.init_params(size)
 
+    def get_behavior(self, name):
+        """Gets a specified behavior from this Fly's `behaviors` list.
+
+        Parameters
+        ----------
+        name : string
+            Name of behavior to return.
+
+        Returns
+        -------
+        Behavior 
+            Specified behavior.
+
+        Raises
+        ------
+        AttributeError : 
+            If behavior does not exist.
+        """
+        for behav in self.behaviors:
+            if behav.name == name:
+                return behav
+        
+        raise AttributeError("Behavior '{}' not found.".format(name))
+
+    def list_behaviors(self):
+        """Gets a list of all the current Behavior names in this Fly.
+
+        Returns
+        -------
+        behavior_names : list of string
+            Current Behavior names contained in this Fly.
+        """
+        behavior_names = []
+        for behav in self.behaviors:
+            behavior_names.append(behav.name)
+        return behavior_names
+
     def from_csv(self, csv_file):
         """Allows the creation of a Fly from a csv file.
 
@@ -242,7 +279,7 @@ class Fly(object):
 
         Returns
         -------
-        fly : Fly object
+        Fly :
             Fly contained within DataFrame.
         """
         fly = cls()
@@ -359,7 +396,8 @@ class Fly(object):
 
         Returns
         -------
-        df : pandas.DataFrame object
+        pandas.DataFrame :
+            DataFrame containing all tracked features of this Fly.
         """
         # get parameters for all instances of Ellipse as DataFrames, and
         # append a string descriptor to the head of each column in each
