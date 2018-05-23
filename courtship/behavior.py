@@ -198,9 +198,9 @@ class Behavior(object):
 
     def bout_num(self):
         """Finds the number of bouts contained within this Behavior.
-        
+
         A bout is defined as an uninterrupted sequence of behavioral events.
-        
+
         Returns
         -------
         int

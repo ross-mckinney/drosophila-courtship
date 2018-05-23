@@ -227,18 +227,18 @@ class Fly(object):
 
         Returns
         -------
-        Behavior 
+        Behavior
             Specified behavior.
 
         Raises
         ------
-        AttributeError : 
+        AttributeError :
             If behavior does not exist.
         """
         for behav in self.behaviors:
             if behav.name == name:
                 return behav
-        
+
         raise AttributeError("Behavior '{}' not found.".format(name))
 
     def list_behaviors(self):
