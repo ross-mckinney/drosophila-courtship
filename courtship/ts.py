@@ -6,25 +6,6 @@
 
 .. moduleauthor:: Ross McKinney
 """
-import os
-import pickle
-import warnings
-from datetime import datetime
-
-import matplotlib.pyplot as plt
-import matplotlib.colors as mpl_colors
-from mpl_toolkits.mplot3d import Axes3D
-
-import motmot.FlyMovieFormat.FlyMovieFormat as FMF
-
-import numpy as np
-import pandas as pd
-
-import pycircstat.descriptive as pysum
-import pycircstat.tests as pytest
-import pytz
-
-from .fly import Fly
 from .meta import (
     VideoMeta,
     ArenaMeta,
@@ -47,85 +28,78 @@ class TrackingSummary(object):
         String denoting to which group tracked objects belong.
     """
     def __init__(self):
-        self.video_file = None
-        self.fps = None
-        self.start_time = None
-        self.end_time = None
-        self.arena_type = None
-        self.arena_size_mm = None
-        self.pixels_per_mm = None
+        self.video = VideoMeta()
+        self.arena = ArenaMeta()
+        self.software = SoftwareTrackingMeta()
         self.group = None
-        self.tight_threshold = None
-        self.loose_threshold = None
-        self.date_tracked = None
-        self.tracking_software = None
-        self.behaviors = {}
 
     def __str__(self):
-        """Pretty print of class properties."""
-        params = self.get_meta_data()
-        class_description = 'Tracking Summary\n----------------'
-        for key in sorted(params.keys()):
-            class_description += '\n{}: {}'.format(key, params[key])
-        return class_description
+        class_str = (
+            'Tracking Summary\n' +
+            '----------------\n' +
+            'Group: {}\n'.format(self.group) +
+            self.video.__str__() + '\n' +
+            self.arena.__str__() + '\n' +
+            self.software.__str__()
+            )
+        return class_str
 
-    def get_meta_data(self):
+    def meta_data(self):
         """Returns a dictionary of all meta data associated with this object.
 
-        Meta data is everything except for any flies and/or behaviors.
-
         Returns
         -------
-        meta : dictionary
+        dict
+            Meta data (VideoMeta, ArenaMeta, SoftwareMeta) associated with
+            this TrackingSummary. Each key is a string, formatted with its
+            type and attribute named joined with a '.'; each value is the
+            attribute value.
+
+        Examples
+        --------
+        >>> ts = TrackingSummary()
+        >>> ts.meta_data()
+        {'arena.center_pixel_cc': None,
+         'arena.center_pixel_rr': None,
+         'arena.diameter_mm': None,
+         'arena.radius_mm': None,
+         'arena.shape': None,
+         'arena.vertices': None,
+         'group': None,
+         'software.date_tracked': None,
+         'software.loose_threshold': None,
+         'software.tight_threshold': None,
+         'software.version': None,
+         'video.duration_frames': None,
+         'video.duration_seconds': None,
+         'video.end_time': None,
+         'video.filename': None,
+         'video.fps': None,
+         'video.pixels_per_mm': None,
+         'video.start_time': None,
+         'video.timestamps': None}
         """
-        meta = {}
-        for k, v in self.__dict__.iteritems():
-            if k in ['male', 'female', 'behaviors']:
-                continue
-            meta[k] = v
+        meta = {
+            'video': self.video,
+            'arena': self.arena,
+            'software': self.software
+        }
+        meta_dict = {}
+        for attr_meta_type, datum in meta.iteritems():
+            named_data = {}
+            for key, val in datum.__dict__.iteritems():
+                named_data['.'.join([attr_meta_type, key])] = val
+            meta_dict.update(named_data)
+        meta_dict.update({'group': self.group})
+        return meta_dict
 
-        return meta
 
-    def get_video_statistics(self):
-        """Gets summary statistics about a this classes' associated video file.
+class FixedCourtshipTrackingSummary(TrackingSummary):
+    def __init__(self):
+        super(FixedCourtshipTrackingSummary, self).__init__()
+        self.male = None
+        self.female = None
 
-        Returns
-        -------
-        fps : float
-            Number of frames per second.
-
-        start_time : string
-            Date and time that video recording started.
-
-        end_time : string
-            Date and time that video recording ended.
-        """
-        video = FMF.FlyMovie(self.video_file)
-        timestamps = video.get_all_timestamps()
-        fps = 1. / np.mean(np.diff(timestamps))
-        start_time = datetime.fromtimestamp(timestamps[0]).strftime(
-            '%Y-%m-%d %H:%M:%S')
-        end_time = datetime.fromtimestamp(timestamps[-1]).strftime(
-            '%Y-%m-%d %H:%M:%S')
-        return fps, start_time, end_time
-
-    def set_attributes(self, **kwargs):
-        """Sets some - or all - attributes of this class.
-
-        Parameters
-        ----------
-        kwargs : dictionary
-            Keys should be attribute names, and values should be data
-            associated with that attribute.
-        """
-        available_attributes = self.__dict__.keys()
-        for k, v in kwargs.iteritems():
-            if k in available_attributes:
-                setattr(self, k, v)
-            else:
-                raise NameError(
-                    "Key <{}> is not a valid attribute name.".format(k))
-
-        if self.video_file is not None and os.path.exists(self.video_file):
-            self.fps, self.start_time, self.end_time = \
-                self.get_video_statistics()
+    def __str__(self):
+        class_str = ''
+        return class_str + super(FixedCourtshipTrackingSummary, self).__str__()
