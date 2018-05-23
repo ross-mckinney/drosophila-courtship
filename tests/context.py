@@ -7,3 +7,4 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import courtship.fly as fly
 import courtship.behavior as behavior
+import courtship.ts as ts
