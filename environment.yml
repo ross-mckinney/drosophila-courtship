@@ -1,5 +1,6 @@
 name: courtship
 dependencies:
+    - python=2.7
     - alabaster
     - matplotlib
     - numpy
