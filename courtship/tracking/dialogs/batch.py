@@ -10,7 +10,7 @@ import numpy as np
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from widgets.batch import *
+from ..widgets.batch import *
 
 class BatchTrackingDialog(QDialog):
     """Dialog for batch processing videos."""
