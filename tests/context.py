@@ -9,3 +9,4 @@ import courtship.fly as fly
 import courtship.behavior as behavior
 import courtship.ts as ts
 import courtship.tracking.arena as trk_arena
+import courtship.tracking.female as trk_female
