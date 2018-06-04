@@ -143,6 +143,14 @@ class Ellipse(object):
         # return DataFrame where columns have been sorted alphabetically.
         return df.reindex_axis(sorted(df.columns), axis=1)
 
+    def area(self):
+        if self.major_axis_length is None:
+            return None
+
+        half_maj = 0.5 * self.major_axis_length
+        half_min = 0.5 * self.minor_axis_length
+        return np.pi * half_maj * half_min
+
 
 class Body(Ellipse):
     """The body is a distinct type of ellipse with directionality.
