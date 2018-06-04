@@ -133,10 +133,10 @@ def find_male(image, female, arena, lp_threshold):
     image : np.ndarray of type np.uint8
         Image to find male within
 
-    female : gui.objects.female.Female object
+    female : female.Female object
         Object which describes female.
 
-    arena : gui.objects.arena.CircularArena object
+    arena : arena.CircularArena object
         Object which describes arena.
 
     lp_threshold : int
@@ -182,7 +182,7 @@ def find_female(image, female, lp_threshold):
     image : np.ndarray
         Image within which to find female.
 
-    female : gui.objects.female.Female object
+    female : female.Female object
         Female defined by user.
 
     lp_threshold : int
