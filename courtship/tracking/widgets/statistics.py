@@ -5,10 +5,13 @@ Widgets for examining statistical data.
 """
 import numpy as np
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from utils import get_q_image, get_mouse_coords
+from ..utils import (
+    get_q_image, 
+    get_mouse_coords
+)
 
 
 class StatisticWindowWidget(QWidget):
@@ -20,7 +23,7 @@ class StatisticWindowWidget(QWidget):
         Possible statistics to display. Keys will be displayed in stat_combobox,
         and values will be displayed in the stat_image_label.
 
-    tracking_summary : FixedCourtshipTrackingSummary object or None (default = None)
+    tracking_summary : FixedCourtshipTrackingSummary or None (default=None)
         TrackingSummary object from which to show selected statistics.
 
     window_size : int (default = 640)
@@ -111,7 +114,8 @@ class StatisticWindowWidget(QWidget):
         """
         self.current_ix = ix
         try: 
-            current_stat = self.statistics[str(self.stat_combobox.currentText())]
+            current_stat = self.statistics[
+                str(self.stat_combobox.currentText())]
         except KeyError:
             return
 
@@ -122,13 +126,15 @@ class StatisticWindowWidget(QWidget):
             stat_window = current_stat[current_stat.size - self.window_size:]
             marker = self.window_size + ix - current_stat.size
         else:
-            stat_window = current_stat[ix - self.window_size / 2:ix + self.window_size/2]
+            stat_window = current_stat[
+                ix - self.window_size / 2:ix + self.window_size/2]
             marker = self.window_size / 2
 
         self.stat_image = np.zeros(
-            shape=(self.window_height, self.window_size, 3), dtype = np.uint8)
+            shape=(self.window_height, self.window_size, 3), dtype=np.uint8)
         for col, val in enumerate(stat_window):
-            self.stat_image[int(self.window_height - val):, col, :] = [141, 221, 247]
+            self.stat_image[
+                int(self.window_height - val):, col, :] = [141, 221, 247]
         self.stat_image[:, marker, :] = 100
 
         self.stat_image_label.setPixmap(
@@ -156,9 +162,9 @@ class StatisticWindowWidget(QWidget):
 
         self.statistics = pushed_stats
 
+
 class SelectableWindow(StatisticWindowWidget):
     """Base class for any window that allows a user to interact with it."""
-
     scrolled_on_window = pyqtSignal(int)
 
     def __init__(self, 
@@ -167,7 +173,6 @@ class SelectableWindow(StatisticWindowWidget):
         window_size = 640,
         window_height = 30,
         parent = None):
-
         super(SelectableWindow, self).__init__(
             tracking_summary = tracking_summary,
             statistics = statistics,
@@ -283,7 +288,6 @@ class StatProcessingWindowWidget(SelectableWindow):
     This is useful so that a user may 'grab' pieces of a signal to 
     do analyses on them.
     """
-
     #signal that contains the raw statistic data.
     #Should emit the statistic/signal name, followed by the start
     #index, the stop index, then the raw statistic value.
