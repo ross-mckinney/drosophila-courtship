@@ -8,9 +8,11 @@ class ZeroRegionProps(object):
         self.area = 0
         self.centroid = (0, 0)
 
+
 class TrackingError(Exception):
     """Base class for all errors that could occur during tracking."""
     pass
+
 
 class NoPropsDetected(TrackingError):
     """Raised if no region properties were detected for wings in a binary frame.
