@@ -3,13 +3,13 @@ text.py
 
 Label and text widgets.
 """
-import os 
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 
 class BatchStepList(QWidget):
-
+    """List displayed to the left of the main Batch widgets to show the
+    user which tracking setup step they are on."""
     active_style = "QLabel { background-color : #eff0f1; color : #31363b; }"
     inactive_style = "QLabel { background-color : #31363b; color : #eff0f1; }"
 
