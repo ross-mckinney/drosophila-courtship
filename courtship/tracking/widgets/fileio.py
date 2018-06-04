@@ -5,10 +5,8 @@ Widgets for navigating folders and adding files.
 """
 import os 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-from objects.settings import VideoSettings
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 class FileExplorer(QWidget):
     """Widget for navigating through folders/files.
