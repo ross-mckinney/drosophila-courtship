@@ -6,31 +6,36 @@ Widgets for batch processing videos.
 import os
 import pickle
 import time
-import json
 
 from datetime import datetime
 
-import cv2
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from skimage import transform
+from skimage.color import (
+    rgb2gray,
+    gray2rgb
+)
+import skimage.transform as sk_transform
 
-from objects.settings import VideoSettings
-from objects.arena import CircularArena
-from objects.female import Female
-from text import *
-from tracking.thresholding import *
-from tracking.centroid import *
-from tracking.image_transforms import *
-from tracking.image_annotations import *
-from tracking.wing import *
+from ...fly import Fly
+from ...ts import FixedCourtshipTrackingSummary
 
-from canal.objects.fly import Fly
-from canal.objects.experiment import FixedCourtshipTrackingSummary
+from ..arena import CircularArena
+from ..drawing import draw_tracked_wings
+# from ..female import Female
+from ..settings import TrackingSettings
+from ..tracking import *
+from ..transforms import *
+from ..utils import (
+    get_q_image, 
+    get_mouse_coords,
+    clear_list
+)
 
-import utils
+from .text import *
+
 
 class BatchSettingsWidget(QWidget):
     """Base class for all widgets.
@@ -46,18 +51,18 @@ class BatchSettingsWidget(QWidget):
 
     Attributes
     ----------
-    video_settings : list of VideoSettings
+    video_settings : list of TrackingSettings
         Video settings for all of the specified videos.
 
     Signals
     -------
-    all_settings_valid : bool, list of VideoSettings
+    all_settings_valid : bool, list of TrackingSettings
         The emitted signal should be implemented in derived 
         classes, since each step has different requirements.
 
     Slots
     -----
-    update_settings : list of VideoSettings
+    update_settings : list of TrackingSettings
         Updates the self.video_settings variable to account
         for changes across all BatchSettingWidgets.
     """
@@ -132,7 +137,6 @@ class ImageArrayWidget(QWidget):
         SpinBox containing user threshold. Connect threshold_spinbox.valueChanged
         to custom function to set specific threshold &/or update images.
     """
-
     def __init__(self, parent = None):
         super(ImageArrayWidget, self).__init__(parent)
         self.layout = QGridLayout()
@@ -207,7 +211,7 @@ class ImageArrayWidget(QWidget):
         """
         self.image_labels[label_ix].setPixmap(
                 QPixmap.fromImage(
-                        utils.get_q_image(img)
+                        get_q_image(img)
                     ).scaled(
                         QSize(self.image_width, self.image_height),
                         Qt.KeepAspectRatio)
@@ -350,7 +354,7 @@ class BatchFileSelector(BatchSettingsWidget):
                     for f in os.listdir(self.video_directory)
                     if f.split('.')[-1] == 'fmf']
                 )
-            utils.clear_list(self.video_files_list)
+            clear_list(self.video_files_list)
             if len(self.video_file_names) == 0:
                 self.video_directory = None
             else:
@@ -383,7 +387,7 @@ class BatchFileSelector(BatchSettingsWidget):
                         )
                         for f in self.video_file_names
                     ]
-                utils.clear_list(self.save_files_list)
+                clear_list(self.save_files_list)
                 self.save_files_list.addItems(self.save_file_names)
 
             self.save_dir_lineedit.setText(self.save_directory)
@@ -411,7 +415,7 @@ class BatchFileSelector(BatchSettingsWidget):
             and self.save_directory is not None:
             if len(self.video_settings) == 0:
                 for i, video_fname in enumerate(self.video_file_names):
-                    settings = VideoSettings()
+                    settings = TrackingSettings()
                     settings.video_file = video_fname
                     settings.save_file = self.save_file_names[i]
                     self.video_settings.append(settings)
@@ -456,7 +460,7 @@ class BatchFileSelector(BatchSettingsWidget):
                     for f in self.save_file_names
                 ]
 
-            utils.clear_list(self.save_files_list)
+            clear_list(self.save_files_list)
             self.save_file_names = new_names
             self.save_files_list.addItems(self.save_file_names)
          
@@ -498,8 +502,8 @@ class BatchFileSelector(BatchSettingsWidget):
 
         self.video_dir_lineedit.setText('')
         self.save_dir_lineedit.setText('')
-        utils.clear_list(self.video_files_list)
-        utils.clear_list(self.save_files_list)
+        clear_list(self.video_files_list)
+        clear_list(self.save_files_list)
 
         self.update_statistics()
         self.update_video_settings()
@@ -540,7 +544,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         # Init the image label to a blank 480 x 640 QImage
         image = np.zeros(shape = (480, 640), dtype = np.uint8)
         self.image_label.setPixmap(
-            QPixmap.fromImage(utils.get_q_image(image))
+            QPixmap.fromImage(get_q_image(image))
             )
         self.image_label.mousePressEvent = self.image_click
         self.image_label.mouseMoveEvent = self.image_move
@@ -614,7 +618,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
 
         #make sure that we are not appending to the list every time a 
         #user navigates away from this widget.
-        utils.clear_list(self.video_list_widget)
+        clear_list(self.video_list_widget)
 
         for settings in self.video_settings:
             base_name = os.path.basename(settings.video_file)
@@ -632,7 +636,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.accept_arena()
         self.image_label.setPixmap(
                 QPixmap.fromImage(
-                    utils.get_q_image(
+                    get_q_image(
                         self.video_settings[
                             self.current_video_ix].arena.draw_arena()
                         )
@@ -648,12 +652,12 @@ class BatchArenaSpecifier(BatchSettingsWidget):
 
     def image_click(self, event):
         """Records location of first user click on image label."""
-        rr, cc = utils.get_mouse_coords(event)
+        rr, cc = get_mouse_coords(event)
         self.arena_start = np.array([rr, cc])
 
     def image_move(self, event):
         """Gets position of mouse move during click event on image label."""
-        rr, cc = utils.get_mouse_coords(event)
+        rr, cc = get_mouse_coords(event)
         self.arena_end = np.array([rr, cc])
         self.draw_arena()
 
@@ -710,7 +714,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         and self.video_settings[index].arena.radius is not None:
             self.image_label.setPixmap(
                 QPixmap.fromImage(
-                    utils.get_q_image(
+                    get_q_image(
                         self.video_settings[index].arena.draw_arena()
                         )
                     )
@@ -718,7 +722,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         else:
             self.image_label.setPixmap(
                 QPixmap.fromImage(
-                    utils.get_q_image(
+                    get_q_image(
                         self.video_settings[index].arena.background_image
                         )
                     )
@@ -769,7 +773,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         
         self.image_label.setPixmap(
             QPixmap.fromImage(
-                utils.get_q_image(
+                get_q_image(
                     self.video_settings[
                         self.current_video_ix].arena.background_image
                     )
@@ -830,7 +834,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         # Init the image label to a blank 480 x 640 QImage
         image = np.zeros(shape = (480, 640), dtype = np.uint8)
         self.image_label.setPixmap(
-            QPixmap.fromImage(utils.get_q_image(image))
+            QPixmap.fromImage(get_q_image(image))
             )
         self.image_label.mousePressEvent = self.image_click
         self.image_label.mouseMoveEvent = self.image_move
@@ -907,7 +911,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
 
         # make sure that we are not appending to the list every time a 
         # user navigates away from this widget.
-        utils.clear_list(self.video_list_widget)
+        clear_list(self.video_list_widget)
 
         for settings in self.video_settings:
             base_name = os.path.basename(settings.video_file)
@@ -938,7 +942,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         if self.video_settings[index].female.settings_valid():
             self.image_label.setPixmap(
                 QPixmap.fromImage(
-                    utils.get_q_image(
+                    get_q_image(
                         self.video_settings[index].female.draw_female()
                         )
                     )
@@ -946,7 +950,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         else:
             self.image_label.setPixmap(
                 QPixmap.fromImage(
-                    utils.get_q_image(
+                    get_q_image(
                         self.video_settings[index].arena.background_image
                         )
                     )
@@ -985,7 +989,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         self.accept_female()
         self.image_label.setPixmap(
             QPixmap.fromImage(
-                utils.get_q_image(
+                get_q_image(
                     self.video_settings[
                         self.current_video_ix].arena.background_image
                     )
@@ -1017,7 +1021,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         self.get_ellipse_params()
         self.image_label.setPixmap(
             QPixmap.fromImage(
-                utils.get_q_image(
+                get_q_image(
                     self.video_settings[
                         self.current_video_ix].female.draw_female()
                     )
@@ -1026,12 +1030,12 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         
     def image_click(self, event):
         """Sets the rear of the female fly based on the first user click."""
-        rr, cc = utils.get_mouse_coords(event)
+        rr, cc = get_mouse_coords(event)
         self.rear = np.array([rr, cc])
 
     def image_move(self, event):
         """Sets the head of the female fly based on the most recent mouse move."""
-        rr, cc = utils.get_mouse_coords(event)
+        rr, cc = get_mouse_coords(event)
         self.head = np.array([rr, cc])
         self.draw_ellipse()
 
@@ -1163,6 +1167,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
             return
 
         for i, ix in enumerate(self.frame_ixs):
+            ix = long(ix)
             frame = self.video_settings[self.current_video_ix].video.get_frame(ix)[0]
             try:
                 male_props_abs = find_male(
@@ -1171,18 +1176,21 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
                         arena = self.video_settings[self.current_video_ix].arena,
                         lp_threshold = self.threshold)
             except NoPropsDetected as NPD:
-                image = np.zeros(shape = (100, 100), dtype = np.uint8)
+                image = np.zeros(shape = (100, 100), dtype=np.uint8)
                 self.image_array_widget.update_image_label(i, image)
 
                 percent_complete = (i + 1.) / self.frame_ixs.size * 100
                 self.image_calc_progress.emit(
-                    percent_complete, 'Caculating background threshold images.')
+                    percent_complete, 
+                    'Calculating background threshold images.'
+                    )
                 continue
 
             # first three rows in image array
             if i < 3:
                 image = low_pass_threshold_binary(frame, self.threshold) * 255
-                image[np.where(self.video_settings[self.current_video_ix].arena.get_arena_mask() == 0)] = 55
+                image[np.where(self.video_settings[
+                    self.current_video_ix].arena.get_arena_mask() == 0)] = 55
 
             # second three rows in image array		
             elif i < 6:	
@@ -1191,34 +1199,44 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
                         centroid = male_props_abs.centroid,
                         size = (200, 200)
                     )
-                image = transform.rotate(image, -male_props_abs.orientation * 180 / np.pi, preserve_range = True).astype(np.uint8)
+                image = sk_transform.rotate(
+                    image, 
+                    -male_props_abs.orientation * 180 / np.pi, 
+                    preserve_range=True
+                    ).astype(np.uint8)
 
-                # rotate image based on orientation, and draw a line through the middle.
-                image = trim_image2d(image, size = (100, 100))
-                image = cv2.cvtColor(image, cv2.cv.CV_GRAY2BGR)
-                cv2.line(image, (0, 50), (100, 50), (255, 0, 0), 1, cv2.cv.CV_AA)
+                # rotate image based on orientation, 
+                # and draw a line through the middle.
+                image = trim_image2d(image, size=(100, 100))
+                image = gray2rgb(image)
+                image[50, :, 0] = 255
+                image[50, :, 1] = 0
+                image[50, :, 2] = 0
+                # cv2.line(image, (0, 50), (100, 50), (255, 0, 0), 1, cv2.cv.CV_AA)
 
             # final three rows in image array
             else:
                 threshold_img = low_pass_threshold_binary(frame, self.threshold)
-                # get coordinates of all regions in image that are below user threshold
+                # get coordinates of all regions in image that 
+                # are below user threshold
                 b_rr, b_cc = np.where(threshold_img)
                 # and get coordinates for female mask
                 f_rr, f_cc = np.where(
                     self.video_settings[self.current_video_ix].female.get_female_mask()
                     )
-                image = cv2.cvtColor(frame, cv2.cv.CV_GRAY2BGR)
+                image = gray2rgb(image)
                 image[b_rr, b_cc, 0] = 200
                 image[f_rr, f_cc, :] = 255
                 image = center_image_in_frame3d(
                         image, 
-                        centroid = male_props_abs.centroid,
-                        size = (100, 100)
+                        centroid=male_props_abs.centroid,
+                        size=(100, 100)
                     )
 
             self.image_array_widget.update_image_label(i, image)
             percent_complete = (i + 1.) / self.frame_ixs.size * 100
-            self.image_calc_progress.emit(percent_complete, 'Caculating background threshold images.')
+            self.image_calc_progress.emit(
+                percent_complete, 'Caculating background threshold images.')
 
     @pyqtSlot(int)
     def update_threshold(self, threshold):
@@ -1237,7 +1255,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
 
         # make sure that we are not appending to the list every time a 
         # user navigates away from this widget.
-        utils.clear_list(self.video_list_widget)
+        clear_list(self.video_list_widget)
 
         for settings in self.video_settings:
             base_name = os.path.basename(settings.video_file)
@@ -1360,6 +1378,7 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
             return
 
         for i, ix in enumerate(self.frame_ixs):
+            ix = long(ix)
             frame = self.video_settings[self.current_video_ix].video.get_frame(ix)[0]
 
             try:
@@ -1408,7 +1427,7 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
                     )
                 image *= 255
             
-            image = cv2.cvtColor(image, cv2.cv.CV_GRAY2BGR)
+            image = gray2rgb(image)
     
             self.image_array_widget.update_image_label(i, image)
             percent_complete = (i + 1.) / self.frame_ixs.size * 100
@@ -1436,7 +1455,7 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
 
         #make sure that we are not appending to the list every time a 
         #user navigates away from this widget.
-        utils.clear_list(self.video_list_widget)
+        clear_list(self.video_list_widget)
 
         for settings in self.video_settings:
             base_name = os.path.basename(settings.video_file)
@@ -1548,7 +1567,7 @@ class BatchTrackingWidget(BatchSettingsWidget):
                 )
 
             for frame_ix in xrange(self.video_settings[ix].video.get_n_frames()):
-
+                frame_ix = long(frame_ix)
                 frame, ts = self.video_settings[ix].video.get_frame(frame_ix)
 
                 try:
