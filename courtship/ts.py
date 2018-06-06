@@ -103,3 +103,7 @@ class FixedCourtshipTrackingSummary(TrackingSummary):
     def __str__(self):
         class_str = ''
         return class_str + super(FixedCourtshipTrackingSummary, self).__str__()
+
+    def to_xlsx(self):
+        raise NotImplementedError('to_xlsx() has not been implemented yet. ' +
+            'Please save as .fcts file.')
