@@ -27,13 +27,14 @@ class TestFemale(unittest.TestCase):
     def _get_female(self):
         female = trk_female.Female(self.arena)
 
-        # "fake" female coordinates/rotation
-        female.center = (238, 320)
-        female.head = (233, 318)
-        female.rear = (256, 281)
-        female.maj_ax_rad = 28
-        female.min_ax_rad = 14
-        female.orientation = -15
+        # these values are from `known` tracked values in the 
+        # test video.
+        female.center = (320, 238)[::-1]  # (x, y) --> (r, c)
+        female.head = (343, 236)[::-1]    # (x, y) --> (r, c)
+        female.rear = (298, 233)[::-1]    # (x, y) --> (r, c)
+        female.maj_ax_rad = 51 / 2
+        female.min_ax_rad = 16 / 2
+        female.orientation = -0.22 * (180 / np.pi)
 
         return female
 
