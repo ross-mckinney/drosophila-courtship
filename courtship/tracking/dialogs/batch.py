@@ -7,15 +7,24 @@ import os
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from ..widgets.batch import *
+from ..widgets.batch import (
+    StackedStepWidget,
+    BatchFileSelector,
+    BatchArenaSpecifier,
+    BatchFemaleSpecifier,
+    BatchTightThresholdSpecifier,
+    BatchLooseThresholdSpecifier,
+    BatchTrackingWidget
+)
+
 
 class BatchTrackingDialog(QDialog):
     """Dialog for batch processing videos."""
     def __init__(self, root_folder, parent = None):
-        super(TrackingDialog, self).__init__(parent)
+        super(BatchTrackingDialog, self).__init__(parent)
         self.setWindowTitle('Batch Processing Wizard')
         self.step_number = 0
         self.video_settings = []
@@ -108,7 +117,7 @@ class BatchTrackingDialog(QDialog):
         self.status.addPermanentWidget(self.progress_bar)
 
     def _step(self):
-        """Upates layout currently being displayed in StackedLayout."""
+        """Updates layout currently being displayed in StackedLayout."""
         self.widgets.setCurrentIndex(self.step_number)
         if self.widgets.currentWidget().settings_widget.check_settings_valid():
             self.next_button.setEnabled(True)

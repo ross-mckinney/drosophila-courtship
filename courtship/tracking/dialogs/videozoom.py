@@ -1,19 +1,18 @@
 """
 statproc.py
 
-Dialog window for doing statistical processing on waveforms/signals stored in a .fcts file.
+Dialog window showing zoomed area over mouse.
 """
-import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 
 from skimage.transform import resize
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from widgets.video import *
+# from ..widgets.video import *
 
-from utils import get_q_image
+from ..utils import get_q_image
 
 
 class ZoomedVideo(QDialog):
@@ -51,5 +50,7 @@ class ZoomedVideo(QDialog):
             preserve_range=True
             )
 
-        pixmap = QPixmap.fromImage(get_q_image(self.zoomed_image.astype(np.uint8)))
+        pixmap = QPixmap.fromImage(
+            get_q_image(self.zoomed_image.astype(np.uint8))
+            )
         self.video_label.setPixmap(pixmap)

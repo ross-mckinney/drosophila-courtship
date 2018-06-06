@@ -7,14 +7,20 @@ import time, datetime
 
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
-from skimage.draw import line_aa, polygon_perimeter
+from skimage.draw import (
+    line_aa,
+    polygon_perimeter
+)
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from tracking.image_annotations import draw_tracked_wings
-from dialogs.videozoom import ZoomedVideo
-from utils import get_q_image, get_mouse_coords
+from ..drawing import draw_tracked_wings
+from ..dialogs.videozoom import ZoomedVideo
+from ..utils import (
+    get_q_image,
+    get_mouse_coords
+)
 
 class VideoControls(QWidget):
     """Container for standard video controls.
@@ -22,7 +28,7 @@ class VideoControls(QWidget):
     This includes the play, stop, next, and previous
     buttons as well as the slider.
     """
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(VideoControls, self).__init__(parent)
 
 
@@ -55,7 +61,7 @@ class BaseVideoPlayer(QWidget):
     image_annotation : bool (default = False)
         Whether or not an annotated (tracked) image should be displayed.
 
-    tracking_summary : FixedCourtshipTrackingSummary object or None (default = None)
+    tracking_summary : FixedCourtshipTrackingSummary object or None (default=None)
         Containing flies to draw annotated images (if necessary)
 
     Signals
@@ -75,7 +81,7 @@ class BaseVideoPlayer(QWidget):
     """
     frame_changed = pyqtSignal(int, str, int)
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(BaseVideoPlayer, self).__init__(parent)
         self.video = None
         self.video_file_name = None
@@ -89,7 +95,7 @@ class BaseVideoPlayer(QWidget):
         self.zoom_enabled = False
         self.zoom_coords = []
 
-        img = np.zeros(shape = (480, 640), dtype = np.uint8)
+        img = np.zeros(shape=(480, 640), dtype=np.uint8)
         pixmap = QPixmap.fromImage(get_q_image(img))
         self.frame_label.setPixmap(pixmap)
 
@@ -132,11 +138,11 @@ class BaseVideoPlayer(QWidget):
             else:
                 try:
                     img = draw_tracked_wings(
-                            image = self.video.get_frame(self.current_frame_ix)[0],
-                            left_centroid = self.tracking_summary.male.left_wing.centroid.coords()[self.current_frame_ix, :][::-1],
-                            right_centroid = self.tracking_summary.male.right_wing.centroid.coords()[self.current_frame_ix, :][::-1],
-                            head_centroid = self.tracking_summary.male.body.head.coords()[self.current_frame_ix, :][::-1],
-                            tail_centroid = self.tracking_summary.male.body.rear.coords()[self.current_frame_ix, :][::-1]
+                            image=self.video.get_frame(self.current_frame_ix)[0],
+                            left_centroid=self.tracking_summary.male.left_wing.centroid.coords()[self.current_frame_ix, :],
+                            right_centroid=self.tracking_summary.male.right_wing.centroid.coords()[self.current_frame_ix, :],
+                            head_centroid=self.tracking_summary.male.body.head.coords()[self.current_frame_ix, :],
+                            tail_centroid=self.tracking_summary.male.body.rear.coords()[self.current_frame_ix, :]
                         )
                 except:
                     img = self.video.get_frame(self.current_frame_ix)[0]
@@ -158,7 +164,11 @@ class BaseVideoPlayer(QWidget):
 
             pixmap = QPixmap.fromImage(get_q_image(img))
             self.frame_label.setPixmap(pixmap)
-            self.frame_changed.emit(self.current_frame_ix, self._frame_to_time(self.current_frame_ix), int(self.frame_rate))
+            self.frame_changed.emit(
+                self.current_frame_ix, 
+                self._frame_to_time(self.current_frame_ix), 
+                int(self.frame_rate)
+                )
         except FMF.NoMoreFramesException:
             self.current_frame_ix = 0
             self.update_label()
@@ -196,10 +206,14 @@ class BaseVideoPlayer(QWidget):
         #sample a subset of frames for the
         sample_size = 20
         mean_frame_rates = []
-        timestamp_start_ixs = np.random.random_integers(low = 0, high = self.video.get_n_frames() - sample_size - 1, size = 4)
+        timestamp_start_ixs = np.random.random_integers(
+            low=0,
+            high=self.video.get_n_frames() - sample_size - 1,
+            size=4
+            )
 
         for i in timestamp_start_ixs:
-            timestamp_subset =  []
+            timestamp_subset = []
             for ix in xrange(i, i + sample_size):
                 f, t = self.video.get_frame(ix)
                 timestamp_subset.append(t)

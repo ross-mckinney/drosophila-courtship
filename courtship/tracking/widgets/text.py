@@ -13,7 +13,7 @@ class BatchStepList(QWidget):
     active_style = "QLabel { background-color : #eff0f1; color : #31363b; }"
     inactive_style = "QLabel { background-color : #31363b; color : #eff0f1; }"
 
-    def __init__(self, highlight = 0, parent = None):
+    def __init__(self, highlight=0, parent=None):
         super(BatchStepList, self).__init__(parent)
 
         self.layout = QVBoxLayout()

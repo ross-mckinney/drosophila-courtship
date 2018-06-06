@@ -42,11 +42,11 @@ class StatisticWindowWidget(QWidget):
         image label (stat_image_label).
     """
     def __init__(self, 
-            tracking_summary = None, 
-            statistics = {}, 
-            window_size = 640,
-            window_height = 30,
-            parent = None
+            tracking_summary=None, 
+            statistics={}, 
+            window_size=640,
+            window_height=30,
+            parent=None
         ):
         super(StatisticWindowWidget, self).__init__(parent)
         self.tracking_summary = tracking_summary
@@ -69,7 +69,7 @@ class StatisticWindowWidget(QWidget):
                         get_q_image(
                             np.ones(
                                 shape=(self.window_height, self.window_size), 
-                                dtype = np.uint8
+                                dtype=np.uint8
                                 ) * 55
                             )
                     )
@@ -168,17 +168,17 @@ class SelectableWindow(StatisticWindowWidget):
     scrolled_on_window = pyqtSignal(int)
 
     def __init__(self, 
-        tracking_summary = None,
-        statistics = {},
-        window_size = 640,
-        window_height = 30,
-        parent = None):
+        tracking_summary=None,
+        statistics={},
+        window_size=640,
+        window_height=30,
+        parent=None):
         super(SelectableWindow, self).__init__(
-            tracking_summary = tracking_summary,
-            statistics = statistics,
-            window_size = window_size,
-            window_height = window_height,
-            parent = parent)
+            tracking_summary=tracking_summary,
+            statistics=statistics,
+            window_size=window_size,
+            window_height=window_height,
+            parent=parent)
 
         self.window_set = False
 
@@ -294,18 +294,18 @@ class StatProcessingWindowWidget(SelectableWindow):
     region_selected = pyqtSignal(str, int, int, list)
 
     def __init__(self,
-        tracking_summary = None,
-        statistics = {},
-        window_size = 640,
-        window_height = 60,
-        parent = None
+        tracking_summary=None,
+        statistics={},
+        window_size=640,
+        window_height=60,
+        parent=None
         ):
         super(StatProcessingWindowWidget, self).__init__(
-            tracking_summary = tracking_summary,
-            statistics = statistics,
-            window_size = window_size,
-            window_height = window_height,
-            parent = parent
+            tracking_summary=tracking_summary,
+            statistics=statistics,
+            window_size=window_size,
+            window_height=window_height,
+            parent=parent
             )
 
         self.select_region_action = QAction('Select Region', self)
@@ -344,17 +344,17 @@ class ClassificationWindowWidget(SelectableWindow):
     classification_changed = pyqtSignal(str, list)
 
     def __init__(self, 
-        tracking_summary = None,
-        classifications = {},
-        window_size = 640,
-        window_height = 30,
-        parent = None):
+        tracking_summary=None,
+        classifications={},
+        window_size=640,
+        window_height=30,
+        parent=None):
         super(ClassificationWindowWidget, self).__init__(
-            tracking_summary = tracking_summary,
-            statistics = classifications,
-            window_size = window_size,
-            window_height = window_height,
-            parent = parent)
+            tracking_summary=tracking_summary,
+            statistics=classifications,
+            window_size=window_size,
+            window_height=window_height,
+            parent=parent)
 
         set_negative_action = QAction('Classify as negative examples.', self)
         set_negative_action.triggered.connect(

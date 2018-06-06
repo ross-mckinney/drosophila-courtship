@@ -1,23 +1,27 @@
 """
 statproc.py
 
-Dialog window for doing statistical processing on waveforms/signals stored in a .fcts file.
+Dialog window for doing statistical processing on waveforms/signals 
+stored in a .fcts file.
 """
-import os, pickle, json
+import os
+import pickle
+import json
+
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 import pandas as pd
 
 from pyqtgraph import PlotItem, PlotWidget, mkPen
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
-from widgets.batch import *
-from widgets.statistics import *
-from widgets.video import *
+from ...ts import FixedCourtshipTrackingSummary as FCTS
 
-from canal.objects.experiment import FixedCourtshipTrackingSummary as FCTS
+from ..widgets.statistics import StatProcessingWindowWidget
+from ..widgets.video import MainVideoPlayer
+
 import canal.statistics.centroid as centroid_stats
 import canal.statistics.social as social_stats
 import canal.statistics.wing as wing_stats
@@ -140,8 +144,8 @@ class StatProcessing(QMainWindow):
         if file_name.split('.')[-1] == 'fcts':
             with open(file_name, 'rb') as f: 
                 tracking_summary = pickle.load(f)
-        else:
-            tracking_summary = FCTS().from_xlsx(file_name)
+        # else:
+        #     tracking_summary = FCTS().from_xlsx(file_name)
 
         self.selected_data = []
         self.start_ixs = []
