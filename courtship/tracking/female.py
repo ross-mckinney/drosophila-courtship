@@ -28,18 +28,18 @@ class Female(QObject):
     Attributes
     ----------
     center : tuple of int
-        Coordinats of the center of the female's body (rr, cc).
+        Coordinates of the center of the female's body (rr, cc).
 
     maj_ax_rad : int
-        Radius of major axis of ellipse
+        Radius (semi-axis, a) of major axis of ellipse.
 
     min_ax_rad : int
-        Radius of minor axis of ellipse
+        Radius (semi-axis, b) of minor axis of ellipse.
 
     orientation : int
         Rotation of ellipse in degrees. This is the
         rotation of the major axis of the ellipse from 
-        the x-axis
+        the x-axis.
 
     head : tuple of int
         Coordinates of the female's head (rr, cc).
