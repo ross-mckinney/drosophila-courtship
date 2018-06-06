@@ -39,7 +39,7 @@ class VideoMeta(Meta):
     end_time : string
         Recording end time of video ("YYYY-MM-DD HH:MM:SS").
 
-    duration_seconds : int
+    duration_seconds : float
         Total duration of video in seconds.
 
     duration_frames : int
