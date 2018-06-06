@@ -155,7 +155,7 @@ class ImageArrayWidget(QWidget):
         gb = QGroupBox('Frame Subset')
         gb_layout = QGridLayout()
 
-        #set up a 3 x 3 grid of image labels, and set their pixmaps to 0s.
+        # set up a 3x3 grid of image labels, and set their pixmaps to 0s.
         self.image_labels = [QLabel() for i in xrange(9)]
         for i in xrange(9):
             gb_layout.addWidget(self.image_labels[i], i / 3, i % 3)
@@ -220,8 +220,12 @@ class ImageArrayWidget(QWidget):
 
 
 class BatchFileSelector(BatchSettingsWidget):
-    """Allows specification of video files and save files for 
-    batch processing.
+    """Step #1 in the Batch Processing Dialog.
+
+    Allows the user to specify folders containing video files for tracking
+    and either .fcts or .xlsx files for saving tracked data. Note that 
+    all videos to be tracked should be contained within the same folder; and
+    that folder should contain only video files and nothing else.
     """
     def __init__(self, root_folder, parent = None):
         super(BatchFileSelector, self).__init__(parent)
@@ -513,8 +517,15 @@ class BatchFileSelector(BatchSettingsWidget):
     def update_view(self):
         pass
 
+
 class BatchArenaSpecifier(BatchSettingsWidget):
-    """Allows the user to specify circular arenas for multiple videos."""
+    """Step #2 in the Batch Processing Dialog.
+
+    This widget loads all of the videos specified in Step #1, 
+    defines CircularArena objects --- which remain associated with
+    each video --- where the user has specified the extent of each 
+    arena, and calculates background images for each video.
+    """
     background_frame_ix = pyqtSignal(int, str)
 
     def __init__(self, parent = None):
@@ -801,9 +812,16 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.all_settings_valid.emit(True, self.widget_ix, self.video_settings)
         return True
 
+
 class BatchFemaleSpecifier(BatchSettingsWidget):
-    """Arena and Female Specifiers should inherit from a common
-    widget to minimize code."""
+    """Step #3 in the Batch Processing Dialog.
+
+    This widget allows users to specify the ellipse that encloses the 
+    female fixed to the center of the courtship arena. Note that even
+    though there may be variation/error between ellipses defined for
+    multiple females, this should be mostly corrected for by automatic
+    detection of any dark object found within the user-specified ellipse.
+    """
     def __init__(self, parent = None):
         super(BatchFemaleSpecifier, self).__init__(parent)
         self.current_video_ix = 0
@@ -1062,8 +1080,18 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         self.all_settings_valid.emit(True, self.widget_ix, self.video_settings)
         return True
 
+
 class BatchTightThresholdSpecifier(BatchSettingsWidget):
-    """Allows the user to """
+    """Step #4 in the Batch Processing Dialog.
+    
+    This widget allows the user to use a spinbox to set a 
+    'tight' threshold used to find the male in each frame.
+    The 'tight' threshold is used with a low-pass filter to 
+    eliminate any high value (white) pixels. The 'tight' threshold
+    should be low enough to remove pixels containing the male's
+    wings in each frame. Each frame is NOT background subtracted
+    before applying the 'tight' threshold.
+    """
     # slot for loop to generate images for display in 
     # image_array_widget 
     image_calc_progress = pyqtSignal(int, str) 
@@ -1268,8 +1296,13 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
         self.video_list_widget.setCurrentRow(self.current_video_ix)
 
 class BatchLooseThresholdSpecifier(BatchSettingsWidget):
-    """Tight and LooseThresholdSpecifier should inherit from a 
-    common widget to minimize code."""
+    """Step #5 in the Batch Processing Dialog.
+    
+    Allows the user to use a spinbox to define a `loose` threshold
+    for each video. The loose threshold should be defined such that
+    the majority of the fly (including its wings) is detected following
+    low-pass filtering of background-subtracted frames.
+    """
 
     # signal to send to main widget's progress bar.
     image_calc_progress = pyqtSignal(int, str)
@@ -1450,11 +1483,11 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
         self.update_frames()
 
     def update_view(self):
-        """Updates each wiget with new video_settings passed by user
+        """Updates each widget with new video_settings passed by user
         from one of the other widgets within the StackedLayout."""
 
-        #make sure that we are not appending to the list every time a 
-        #user navigates away from this widget.
+        # make sure that we are not appending to the list every time a 
+        # user navigates away from this widget.
         clear_list(self.video_list_widget)
 
         for settings in self.video_settings:
@@ -1467,8 +1500,24 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
 
         self.video_list_widget.setCurrentRow(self.current_video_ix)
 
-class BatchTrackingWidget(BatchSettingsWidget):
 
+class BatchTrackingWidget(BatchSettingsWidget):
+    """Step #6 in the Batch Processing Dialog.
+
+    This final widget shows a spreadsheet containing the tracking
+    settings defined for each video. The group column in the spread-
+    sheet is editable so that the user may enter a group name for each
+    of the tracked videos to make organization of tracking data 
+    easier during analysis.
+
+    Upon clicking "Track", each video is tracked in order, and the 
+    tracking progress is displayed by the ProgressBar in the bottom right
+    of the BatchTrackingDialog window (courtship.tracking.dialogs.batch).
+
+    The main tracking function (`track`) is contained within this widget; 
+    further, `track` is the only function which contains calls to external
+    tracking functions, contained in courtship.tracking.tracking.
+    """
     tracking_progress = pyqtSignal(int, str)
 
     def __init__(self, parent = None):
@@ -1582,7 +1631,8 @@ class BatchTrackingWidget(BatchSettingsWidget):
             # male.video_file = tracking_settings['video_file']
             # female.video_file = tracking_settings['video_file']
 
-            self.progress_log.append('Tracking started for video: {} \nStart Time: {}'.format(
+            self.progress_log.append(
+                'Tracking started for video: {} \nStart Time: {}'.format(
                     tracking_settings['video_file'],
                     time.strftime('%H:%M:%S', time.localtime(start_time))
                 ))
