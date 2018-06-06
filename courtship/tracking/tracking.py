@@ -252,13 +252,13 @@ def set_female_props(female, props, head, rear, i):
     i : int
         Which frame/position in female array to set.
     """
-    female.body.head.y[i], female.body.head.x[i] = head
-    female.body.rear.y[i], female.body.rear.x[i] = rear
-    female.body.centroid.y[i], female.body.centroid.x[i] = props.centroid
+    female.body.centroid.row[i], female.body.centroid.col[i] = props.centroid
+    female.body.head.row[i], female.body.head.col[i] = head
+    female.body.rear.row[i], female.body.rear.col[i] = rear
     female.body.orientation[i] = props.orientation
-    # female.body.area[i] = props.area
     female.body.major_axis_length[i] = props.major_axis_length
     female.body.minor_axis_length[i] = props.minor_axis_length
+    # female.body.area[i] = props.area
 
 
 def tighten_female_ellipse(female, female_props):
@@ -770,22 +770,35 @@ def set_male_props(male, props, i):
     props : dictionary
         Properties returned from a call to find_wings().
     """
-    male.left_wing.centroid.y[i], male.left_wing.centroid.x[i] = props['left_wing_centroid']
-    male.right_wing.centroid.y[i], male.right_wing.centroid.x[i] = props['right_wing_centroid']
-    male.left_wing.major_axis_length[i] = props['left_wing_props'].major_axis_length
-    male.left_wing.minor_axis_length[i] = props['left_wing_props'].minor_axis_length
+    # set left wing attributes
+    male.left_wing.centroid.row[i], male.left_wing.centroid.col[i] = \
+        props['left_wing_centroid']
+    male.left_wing.major_axis_length[i] = \
+        props['left_wing_props'].major_axis_length
+    male.left_wing.minor_axis_length[i] = \
+        props['left_wing_props'].minor_axis_length
+    male.left_wing.orientation[i] = \
+        props['left_wing_props'].orientation
     # male.left_wing.area[i] = props['left_wing_props'].area
-    male.left_wing.orientation[i] = props['left_wing_props'].orientation
-    male.right_wing.major_axis_length[i] = props['right_wing_props'].major_axis_length
-    male.right_wing.minor_axis_length[i] = props['right_wing_props'].minor_axis_length
+
+    # set right wing attributes
+    male.right_wing.centroid.row[i], male.right_wing.centroid.col[i] = \
+        props['right_wing_centroid']
+    male.right_wing.major_axis_length[i] = \
+        props['right_wing_props'].major_axis_length
+    male.right_wing.minor_axis_length[i] = \
+        props['right_wing_props'].minor_axis_length
+    male.right_wing.orientation[i] = \
+        props['right_wing_props'].orientation
     # male.right_wing.area[i] = props['right_wing_props'].area
-    male.right_wing.orientation[i] = props['right_wing_props'].orientation
-    male.body.head.y[i], male.body.head.x[i] = props['head']
-    male.body.rear.y[i], male.body.rear.x[i] = props['rear']
+
+    # set body attributes
+    male.body.head.row[i], male.body.head.col[i] = props['head']
+    male.body.rear.row[i], male.body.rear.col[i] = props['rear']
     male.body.rotation_angle[i] = props['rotation']
-    # male.body.area[i] = props['loose_male_props'].area
     male.body.major_axis_length[i] = props['loose_male_props'].major_axis_length
     male.body.minor_axis_length[i] = props['loose_male_props'].minor_axis_length
+    # male.body.area[i] = props['loose_male_props'].area
 
 
 # if __name__ == '__main__':
