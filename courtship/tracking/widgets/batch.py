@@ -43,12 +43,11 @@ from ... import __version__
 
 from ..arena import CircularArena
 from ..drawing import draw_tracked_wings
-# from ..female import Female
 from ..settings import TrackingSettings
 from ..tracking import *
 from ..transforms import *
 from ..utils import (
-    get_q_image, 
+    get_q_image,
     get_mouse_coords,
     clear_list
 )
@@ -59,7 +58,7 @@ from .text import *
 class BatchSettingsWidget(QWidget):
     """Base class for all widgets.
 
-    This serves one main purpose: to be able to pass 
+    This serves one main purpose: to be able to pass
     along settings that have been specified for each
     video.
 
@@ -76,7 +75,7 @@ class BatchSettingsWidget(QWidget):
     Signals
     -------
     all_settings_valid : bool, list of TrackingSettings
-        The emitted signal should be implemented in derived 
+        The emitted signal should be implemented in derived
         classes, since each step has different requirements.
 
     Slots
@@ -96,7 +95,7 @@ class BatchSettingsWidget(QWidget):
         """Updates the layout in this widget based on user actions
         in other widgets.
 
-        .. note:: This should be implemented in each widget that 
+        .. note:: This should be implemented in each widget that
         inherits this class.
         """
         raise NotImplementedError(
@@ -137,7 +136,7 @@ class ImageArrayWidget(QWidget):
     """Generates a nice layout and convenience functions for displaying a series
     of images.
 
-    The following are attributes which should be connected to/set by classes 
+    The following are attributes which should be connected to/set by classes
     that utilize this widget.
 
     Attributes
@@ -161,7 +160,7 @@ class ImageArrayWidget(QWidget):
         self.layout = QGridLayout()
         self.image_width = 180
         self.image_height = 180
-        
+
         self.set_image_array_gb()
         self.set_instruction_text_edit()
         self.set_threshold_gb()
@@ -241,7 +240,7 @@ class BatchFileSelector(BatchSettingsWidget):
     """Step #1 in the Batch Processing Dialog.
 
     Allows the user to specify folders containing video files for tracking
-    and either .fcts or .xlsx files for saving tracked data. Note that 
+    and either .fcts or .xlsx files for saving tracked data. Note that
     all videos to be tracked should be contained within the same folder; and
     that folder should contain only video files and nothing else.
     """
@@ -272,7 +271,7 @@ class BatchFileSelector(BatchSettingsWidget):
         """Groupbox to allow users to select a batch of videos to track."""
         self.select_file_groupbox = QGroupBox()
         select_file_groupbox_layout = QGridLayout()
-        
+
         row_labels = ['Video Directory', 'Save Directory', 'Save File Type']
         for i, l in enumerate(row_labels):
             select_file_groupbox_layout.addWidget(QLabel(l), i, 0)
@@ -289,7 +288,7 @@ class BatchFileSelector(BatchSettingsWidget):
 
         video_browse_button = QPushButton('Browse')
         save_browse_button = QPushButton('Browse')
-        
+
         video_browse_button.clicked.connect(self.browse_video)
         save_browse_button.clicked.connect(self.browse_save)
 
@@ -317,7 +316,7 @@ class BatchFileSelector(BatchSettingsWidget):
         self.video_files_list = QListWidget()
         self.save_files_list = QListWidget()
 
-        # Make sure that if a user clicks on an item in either list, 
+        # Make sure that if a user clicks on an item in either list,
         # its associated file is also highlighted in the other list.
         self.video_files_list.currentRowChanged.connect(
             self.connect_video_to_save_list)
@@ -339,8 +338,8 @@ class BatchFileSelector(BatchSettingsWidget):
         statistics_groupbox_layout = QGridLayout()
 
         statistic_labels = [
-            'Number of Video Files: ', 
-            'Number of Save Files: ', 
+            'Number of Video Files: ',
+            'Number of Save Files: ',
             'Video Directory: ',
             'Save Directory: ',
             'Save File Type: '
@@ -402,9 +401,9 @@ class BatchFileSelector(BatchSettingsWidget):
             if self.video_directory is not None:
                 self.save_file_names = [
                     os.path.join(
-                            self.save_directory, 
+                            self.save_directory,
                             '.'.join(
-                                [os.path.basename(f).split('.')[0], 
+                                [os.path.basename(f).split('.')[0],
                                 self.save_file_type]
                             )
                         )
@@ -426,12 +425,12 @@ class BatchFileSelector(BatchSettingsWidget):
         if self.video_directory is not None:
             self.video_dir_label.setText(
                 str('../' + os.path.split(self.video_directory)[1]))
-        
+
         if self.save_directory is not None:
             self.save_dir_label.setText(
                 str('../' + os.path.split(self.save_directory)[1]))
         self.save_type_label.setText(str(self.save_file_type))
-        
+
 
     def update_video_settings(self):
         if self.video_directory is not None \
@@ -450,7 +449,7 @@ class BatchFileSelector(BatchSettingsWidget):
     def check_settings_valid(self):
         """Checks to see whether or not video settings have been set.
 
-        If settings have been set, a signal is emitted to the main 
+        If settings have been set, a signal is emitted to the main
         dialog window containing this widget.
         """
         if len(self.video_settings) != 0:
@@ -465,7 +464,7 @@ class BatchFileSelector(BatchSettingsWidget):
     @pyqtSlot(int)
     def update_save_type(self, ix):
         """Slot connecting save_type_combobox to currentIndexChanged.
-    
+
         When the user changes the save file type, the signal is sent here
         and all of the save files are appropriately updated.
         """
@@ -474,9 +473,9 @@ class BatchFileSelector(BatchSettingsWidget):
         if self.save_file_names is not None:
             new_names = [
                 os.path.join(
-                    self.save_directory, 
+                    self.save_directory,
                     '.'.join(
-                            [os.path.basename(f).split('.')[0], 
+                            [os.path.basename(f).split('.')[0],
                             self.save_file_type]
                         )
                     )
@@ -486,11 +485,11 @@ class BatchFileSelector(BatchSettingsWidget):
             clear_list(self.save_files_list)
             self.save_file_names = new_names
             self.save_files_list.addItems(self.save_file_names)
-         
+
         self.update_statistics()
         self.update_video_settings()
         self.check_settings_valid()
-            
+
     @pyqtSlot(int)
     def connect_video_to_save_list(self, ix):
         """Interconnects video_files_list and save_files_list.
@@ -539,9 +538,9 @@ class BatchFileSelector(BatchSettingsWidget):
 class BatchArenaSpecifier(BatchSettingsWidget):
     """Step #2 in the Batch Processing Dialog.
 
-    This widget loads all of the videos specified in Step #1, 
+    This widget loads all of the videos specified in Step #1,
     defines CircularArena objects --- which remain associated with
-    each video --- where the user has specified the extent of each 
+    each video --- where the user has specified the extent of each
     arena, and calculates background images for each video.
     """
     background_frame_ix = pyqtSignal(int, str)
@@ -572,7 +571,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.image_label = QLabel()
 
         # Init the image label to a blank 480 x 640 QImage
-        image = np.zeros(shape = (480, 640), dtype = np.uint8)
+        image = np.zeros(shape=(480, 640), dtype=np.uint8)
         self.image_label.setPixmap(
             QPixmap.fromImage(get_q_image(image))
             )
@@ -617,7 +616,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.layout.addWidget(gb, 2, 2, 1, 1)
 
     def set_arena_gb(self):
-        """Sets up a groupbox containing a SpinBox to specify the size 
+        """Sets up a groupbox containing a SpinBox to specify the size
         (diameter) of the arena."""
         gb = QGroupBox('Arena Properties')
         gb_layout = QGridLayout()
@@ -643,10 +642,10 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.layout.addWidget(gb, 2, 3, 1, 1)
 
     def update_view(self):
-        """Updates each wiget with new video_settings passed by user
+        """Updates each widget with new video_settings passed by user
         from one of the other widgets within the StackedLayout."""
 
-        #make sure that we are not appending to the list every time a 
+        #make sure that we are not appending to the list every time a
         #user navigates away from this widget.
         clear_list(self.video_list_widget)
 
@@ -731,7 +730,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
             self.video_settings[index].video = video
             self.video_settings[index].arena = CircularArena(video)
 
-            # connects the background image calculation loop to 
+            # connects the background image calculation loop to
             # calculate_background, and calculates a background image.
             self.video_settings[index].arena.background_frame_ix.connect(
                     self.calculate_background
@@ -771,7 +770,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
     @pyqtSlot(int)
     def calculate_background(self, frame_ix):
         """Connects background image calculation to the progress bar
-        within the main widget. 
+        within the main widget.
 
         This acts as a slot for each arena's background_frame_ix attribute,
         and emits a signal that is detected by the main widget's
@@ -785,7 +784,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
                 )
         except AttributeError:
             description = ''
-            
+
         self.background_frame_ix.emit(frame_ix, description)
 
     def accept_arena(self):
@@ -793,14 +792,14 @@ class BatchArenaSpecifier(BatchSettingsWidget):
         self.video_settings[self.current_video_ix].arena.radius = self.radius
         self.video_settings[self.current_video_ix].arena.arena_size = self.arena_size_mm
         self.video_settings[self.current_video_ix].arena.pixels_to_mm = self.pixels_to_mm
-        
+
     def reject_arena(self):
         self.center = None
         self.radius = None
         self.pixels_to_mm = None
-        
+
         self.accept_arena()
-        
+
         self.image_label.setPixmap(
             QPixmap.fromImage(
                 get_q_image(
@@ -814,7 +813,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
     def check_settings_valid(self):
         """Checks to see whether or not video settings have been set.
 
-        If settings have been set, a signal is emitted to the main 
+        If settings have been set, a signal is emitted to the main
         dialog window containing this widget.
         """
         for video_setting in self.video_settings:
@@ -826,7 +825,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
                 self.all_settings_valid.emit(
                     False, self.widget_ix, self.video_settings)
                 return False
-        
+
         self.all_settings_valid.emit(True, self.widget_ix, self.video_settings)
         return True
 
@@ -834,7 +833,7 @@ class BatchArenaSpecifier(BatchSettingsWidget):
 class BatchFemaleSpecifier(BatchSettingsWidget):
     """Step #3 in the Batch Processing Dialog.
 
-    This widget allows users to specify the ellipse that encloses the 
+    This widget allows users to specify the ellipse that encloses the
     female fixed to the center of the courtship arena. Note that even
     though there may be variation/error between ellipses defined for
     multiple females, this should be mostly corrected for by automatic
@@ -869,7 +868,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         self.image_label = QLabel()
 
         # Init the image label to a blank 480 x 640 QImage
-        image = np.zeros(shape = (480, 640), dtype = np.uint8)
+        image = np.zeros(shape = (480, 640), dtype=np.uint8)
         self.image_label.setPixmap(
             QPixmap.fromImage(get_q_image(image))
             )
@@ -915,7 +914,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         self.layout.addWidget(gb, 2, 2, 1, 1)
 
     def set_ellipse_gb(self):
-        """Sets up a groupbox that allows a user to adjust the 
+        """Sets up a groupbox that allows a user to adjust the
         ratio of the major-to-minor axis lengths."""
         gb = QGroupBox('Ellipse Settings')
         gb_layout = QGridLayout()
@@ -946,7 +945,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
         """Updates each wiget with new video_settings passed by user
         from one of the other widgets within the StackedLayout."""
 
-        # make sure that we are not appending to the list every time a 
+        # make sure that we are not appending to the list every time a
         # user navigates away from this widget.
         clear_list(self.video_list_widget)
 
@@ -1041,8 +1040,8 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
                 np.sqrt(np.sum((self.head - self.rear)**2)) / 2
                 )
             self.min_ax_rad = int(1. * self.maj_ax_rad / self.ellipse_ratio)
-    
-            # get relative coordinates of head and rear, and find angle 
+
+            # get relative coordinates of head and rear, and find angle
             # between these two along the x-axis.
             rc = (self.head - self.rear)
             self.orientation = int(np.arctan2(rc[0], rc[1]) * 180. / np.pi)
@@ -1063,7 +1062,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
                     )
                 )
             )
-        
+
     def image_click(self, event):
         """Sets the rear of the female fly based on the first user click."""
         rr, cc = get_mouse_coords(event)
@@ -1082,7 +1081,7 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
     def check_settings_valid(self):
         """Checks to see whether or not video settings have been set.
 
-        If settings have been set, a signal is emitted to the main 
+        If settings have been set, a signal is emitted to the main
         dialog window containing this widget.
         """
         for video_setting in self.video_settings:
@@ -1101,18 +1100,18 @@ class BatchFemaleSpecifier(BatchSettingsWidget):
 
 class BatchTightThresholdSpecifier(BatchSettingsWidget):
     """Step #4 in the Batch Processing Dialog.
-    
-    This widget allows the user to use a spinbox to set a 
+
+    This widget allows the user to use a spinbox to set a
     'tight' threshold used to find the male in each frame.
-    The 'tight' threshold is used with a low-pass filter to 
+    The 'tight' threshold is used with a low-pass filter to
     eliminate any high value (white) pixels. The 'tight' threshold
     should be low enough to remove pixels containing the male's
     wings in each frame. Each frame is NOT background subtracted
     before applying the 'tight' threshold.
     """
-    # slot for loop to generate images for display in 
-    # image_array_widget 
-    image_calc_progress = pyqtSignal(int, str) 
+    # slot for loop to generate images for display in
+    # image_array_widget
+    image_calc_progress = pyqtSignal(int, str)
 
     def __init__(self, parent = None):
         super(BatchTightThresholdSpecifier, self).__init__(parent)
@@ -1138,15 +1137,18 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
         This is a slot for the image_array_widget.randomize_button.clicked
         signal.
         """
-        self.frame_ixs = np.random.randint(
-            low = 0, 
-            high = self.video_settings[self.current_video_ix].video.get_n_frames(),
-            size = 9)
+        self.frame_ixs = np.tile(
+                np.random.randint(
+                    low=0,
+                    high=self.video_settings[self.current_video_ix].video.get_n_frames(),
+                    size=3),
+                3
+            )
         self.update_frames()
 
     def set_image_array_widget(self):
         """Sets up the image array."""
-        help_text = ('Please define a "tight" threshold for each video. ' + 
+        help_text = ('Please define a "tight" threshold for each video. ' +
             'To do this, use the spinbox to the right to adjust the threshold ' +
             'such that the images displayed in the "Frame Subset" group box ' +
             'remove as much of each fly as possible. Try to make sure the wings are ' +
@@ -1184,10 +1186,13 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
         """
         self.current_video_ix = index
         try:
-            self.frame_ixs = np.random.randint(
-                low = 0, 
-                high = self.video_settings[index].video.get_n_frames(),
-                size = 9)
+            self.frame_ixs = np.tile(
+                np.random.randint(
+                    low=0,
+                    high=self.video_settings[index].video.get_n_frames(),
+                    size=3),
+                3
+            )
             self.image_array_widget.threshold_spinbox.setValue(
                     self.video_settings[index].tight_threshold
                 )
@@ -1198,7 +1203,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
         self.update_frames()
 
     def update_frames(self):
-        """Upates all of the images contained within the image_array_widget 
+        """Upates all of the images contained within the image_array_widget
         based on the current threshold.
 
         The first row should just be a binary image showing the threshold of
@@ -1217,7 +1222,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
             frame = self.video_settings[self.current_video_ix].video.get_frame(ix)[0]
             try:
                 male_props_abs = find_male(
-                        frame, 
+                        frame,
                         female = self.video_settings[self.current_video_ix].female,
                         arena = self.video_settings[self.current_video_ix].arena,
                         lp_threshold = self.threshold)
@@ -1227,7 +1232,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
 
                 percent_complete = (i + 1.) / self.frame_ixs.size * 100
                 self.image_calc_progress.emit(
-                    percent_complete, 
+                    percent_complete,
                     'Calculating background threshold images.'
                     )
                 continue
@@ -1238,20 +1243,20 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
                 image[np.where(self.video_settings[
                     self.current_video_ix].arena.get_arena_mask() == 0)] = 55
 
-            # second three rows in image array		
-            elif i < 6:	
+            # second three rows in image array
+            elif i < 6:
                 image = center_image_in_frame(
                         frame,
-                        centroid = male_props_abs.centroid,
-                        size = (200, 200)
+                        centroid=male_props_abs.centroid,
+                        size=(200, 200)
                     )
                 image = sk_transform.rotate(
-                    image, 
-                    -male_props_abs.orientation * 180 / np.pi, 
+                    image,
+                    -male_props_abs.orientation * 180 / np.pi,
                     preserve_range=True
                     ).astype(np.uint8)
 
-                # rotate image based on orientation, 
+                # rotate image based on orientation,
                 # and draw a line through the middle.
                 image = trim_image2d(image, size=(100, 100))
                 image = gray2rgb(image)
@@ -1263,30 +1268,39 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
             # final three rows in image array
             else:
                 threshold_img = low_pass_threshold_binary(frame, self.threshold)
-                # get coordinates of all regions in image that 
+                # get coordinates of all regions in image that
                 # are below user threshold
                 b_rr, b_cc = np.where(threshold_img)
                 # and get coordinates for female mask
                 f_rr, f_cc = np.where(
                     self.video_settings[self.current_video_ix].female.get_female_mask()
                     )
-                image = gray2rgb(image)
+                image = gray2rgb(threshold_img)
                 image[b_rr, b_cc, 0] = 200
                 image[f_rr, f_cc, :] = 255
+                
                 image = center_image_in_frame3d(
-                        image, 
+                        image,
                         centroid=male_props_abs.centroid,
-                        size=(100, 100)
+                        size=(200, 200)
                     )
+
+                image = sk_transform.rotate(
+                    image,
+                    -male_props_abs.orientation * 180 / np.pi,
+                    preserve_range=True
+                    ).astype(np.uint8)
+
+                image = trim_image3d(image, size=(100, 100))
 
             self.image_array_widget.update_image_label(i, image)
             percent_complete = (i + 1.) / self.frame_ixs.size * 100
             self.image_calc_progress.emit(
-                percent_complete, 'Caculating background threshold images.')
+                percent_complete, 'Calculating background threshold images.')
 
     @pyqtSlot(int)
     def update_threshold(self, threshold):
-        """Sets theshold for current video.
+        """Sets threshold for current video.
 
         This is a slot for the threshold_spinbox contained within the
         image_array_widget.
@@ -1296,10 +1310,10 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
         self.update_frames()
 
     def update_view(self):
-        """Updates each wiget with new video_settings passed by user
+        """Updates each widget with new video_settings passed by user
         from one of the other widgets within the StackedLayout."""
 
-        # make sure that we are not appending to the list every time a 
+        # make sure that we are not appending to the list every time a
         # user navigates away from this widget.
         clear_list(self.video_list_widget)
 
@@ -1315,7 +1329,7 @@ class BatchTightThresholdSpecifier(BatchSettingsWidget):
 
 class BatchLooseThresholdSpecifier(BatchSettingsWidget):
     """Step #5 in the Batch Processing Dialog.
-    
+
     Allows the user to use a spinbox to define a `loose` threshold
     for each video. The loose threshold should be defined such that
     the majority of the fly (including its wings) is detected following
@@ -1327,7 +1341,7 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
 
     def __init__(self, parent = None):
         super(BatchLooseThresholdSpecifier, self).__init__(parent)
-        
+
         self.current_video_ix = 0
         self.threshold = 5
         self.frame_ixs = []
@@ -1349,15 +1363,18 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
         This is a slot for the image_array_widget.randomize_button.clicked
         signal.
         """
-        self.frame_ixs = np.random.randint(
-            low = 0, 
-            high = self.video_settings[self.current_video_ix].video.get_n_frames(),
-            size = 9)
+        self.frame_ixs = np.tile(
+                np.random.randint(
+                    low=0,
+                    high=self.video_settings[self.current_video_ix].video.get_n_frames(),
+                    size=3),
+                3
+            )
         self.update_frames()
 
     def set_image_array_widget(self):
         """Sets up the image array."""
-        help_text = ('Please define a "loose" threshold for each video. ' + 
+        help_text = ('Please define a "loose" threshold for each video. ' +
             'To do this, use the spinbox to the right to adjust the threshold ' +
             'such that the images displayed in the "Frame Subset" group box ' +
             'contain as much of each fly as possible. Try to make sure the entirety ' +
@@ -1400,10 +1417,13 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
         self.current_video_ix = index
 
         try:
-            self.frame_ixs = np.random.randint(
-                low = 0, 
-                high = self.video_settings[index].video.get_n_frames(),
-                size = 9)
+            self.frame_ixs = np.tile(
+                np.random.randint(
+                    low=0,
+                    high=self.video_settings[self.current_video_ix].video.get_n_frames(),
+                    size=3),
+                3
+            )
             self.image_array_widget.threshold_spinbox.setValue(
                     self.video_settings[index].loose_threshold
                 ) * 255
@@ -1415,10 +1435,10 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
         self.update_frames()
 
     def update_frames(self):
-        """Updates frames displayed in image_array_widget based on 
+        """Updates frames displayed in image_array_widget based on
         the current loose threshold.
 
-        First row shows a binary image of just the male's body. 
+        First row shows a binary image of just the male's body.
         Second row shows a binary image of the male's body including the wings.
         Third row shows a binary image of the male's body subtracted away from
         the male's body including the wings.
@@ -1434,56 +1454,56 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
 
             try:
                 male_props_abs = find_male(
-                    image = frame, 
+                    image = frame,
                     female = self.video_settings[self.current_video_ix].female,
                     arena = self.video_settings[self.current_video_ix].arena,
                     lp_threshold = self.video_settings[self.current_video_ix].tight_threshold)
             except NoPropsDetected:
-                image = np.zeros(shape = (100, 100), dtype = np.uint8)
+                image = np.zeros(shape=(100, 100), dtype=np.uint8)
 
                 self.image_array_widget.update_image_label(i, image)
                 percent_complete = (i + 1.) / self.frame_ixs.size * 100
                 self.image_calc_progress.emit(
-                    percent_complete, 'Caculating background threshold images.')
+                    percent_complete, 'Calculating background threshold images.')
                 continue
 
             if i < 3:
                 image = get_body_image(
-                        in_shape = frame.shape,
-                        male_props = male_props_abs,
-                        rotation = -male_props_abs.orientation * 180/np.pi,
-                        out_shape = (100, 100)
+                        in_shape=frame.shape,
+                        male_props=male_props_abs,
+                        rotation=-male_props_abs.orientation * 180/np.pi,
+                        out_shape=(100, 100)
                     ) * 255
             elif i < 6:
                 image, r = get_wing_image(
-                        image = frame,
-                        female = self.video_settings[self.current_video_ix].female,
-                        arena = self.video_settings[self.current_video_ix].arena, 
-                        male_props = male_props_abs,
-                        loose_threshold = self.threshold,
-                        shape = (100, 100),
-                        head = 'Right',
-                        subtract_body = False
+                        image=frame,
+                        female=self.video_settings[self.current_video_ix].female,
+                        arena=self.video_settings[self.current_video_ix].arena,
+                        male_props=male_props_abs,
+                        loose_threshold=self.threshold,
+                        shape=(100, 100),
+                        head='Right',
+                        subtract_body=False
                     )
                 image *= 255
             else:
                 image, r = get_wing_image(
-                        image = frame,
-                        arena = self.video_settings[self.current_video_ix].arena,
-                        female = self.video_settings[self.current_video_ix].female,
-                        male_props = male_props_abs,
-                        loose_threshold = self.threshold,
-                        head = 'Right',
-                        subtract_body = True
+                        image=frame,
+                        arena=self.video_settings[self.current_video_ix].arena,
+                        female=self.video_settings[self.current_video_ix].female,
+                        male_props=male_props_abs,
+                        loose_threshold=self.threshold,
+                        head='Right',
+                        subtract_body=True
                     )
                 image *= 255
-            
+
             image = gray2rgb(image)
-    
+
             self.image_array_widget.update_image_label(i, image)
             percent_complete = (i + 1.) / self.frame_ixs.size * 100
             self.image_calc_progress.emit(
-                percent_complete, 'Caculating background threshold images.')
+                percent_complete, 'Calculating background threshold images.')
 
     @pyqtSlot(int)
     def update_threshold(self, threshold):
@@ -1504,7 +1524,7 @@ class BatchLooseThresholdSpecifier(BatchSettingsWidget):
         """Updates each widget with new video_settings passed by user
         from one of the other widgets within the StackedLayout."""
 
-        # make sure that we are not appending to the list every time a 
+        # make sure that we are not appending to the list every time a
         # user navigates away from this widget.
         clear_list(self.video_list_widget)
 
@@ -1525,14 +1545,14 @@ class BatchTrackingWidget(BatchSettingsWidget):
     This final widget shows a spreadsheet containing the tracking
     settings defined for each video. The group column in the spread-
     sheet is editable so that the user may enter a group name for each
-    of the tracked videos to make organization of tracking data 
+    of the tracked videos to make organization of tracking data
     easier during analysis.
 
-    Upon clicking "Track", each video is tracked in order, and the 
+    Upon clicking "Track", each video is tracked in order, and the
     tracking progress is displayed by the ProgressBar in the bottom right
     of the BatchTrackingDialog window (courtship.tracking.dialogs.batch).
 
-    The main tracking function (`track`) is contained within this widget; 
+    The main tracking function (`track`) is contained within this widget;
     further, `track` is the only function which contains calls to external
     tracking functions, contained in courtship.tracking.tracking.
     """
@@ -1543,9 +1563,9 @@ class BatchTrackingWidget(BatchSettingsWidget):
 
         self.layout = QGridLayout()
         self.headers = [
-            'Video File', 
-            'Save File', 
-            'Save Type', 
+            'Video File',
+            'Save File',
+            'Save Type',
             'Tight Threshold',
             'Loose Threshold',
             'Group']
@@ -1651,24 +1671,24 @@ class BatchTrackingWidget(BatchSettingsWidget):
 
             self.progress_log.append(
                 'Tracking started for video: {} \nStart Time: {}'.format(
-                    tracking_settings['video_file'],
+                    settings.video_file,
                     time.strftime('%H:%M:%S', time.localtime(start_time))
                 ))
 
             # get the location and region properties that define
             # the fixed female.
             f_props, f_head, f_rear = find_female(
-                    image = settings.arena.background_image,
-                    female = settings.female,
-                    lp_threshold = settings.tight_threshold
+                    image=settings.arena.background_image,
+                    female=settings.female,
+                    lp_threshold=settings.tight_threshold
                 )
 
             # update female based on props we just found --
-            # this ensures that the ellipse used to mask the female is 
+            # this ensures that the ellipse used to mask the female is
             # not biased by variation in user-defined ellipses.
             tighten_female_ellipse(
-                    female = settings.female,
-                    female_props = f_props
+                    female=settings.female,
+                    female_props=f_props
                 )
 
             # loop through each frame in the video, and find the male.
@@ -1678,14 +1698,14 @@ class BatchTrackingWidget(BatchSettingsWidget):
 
                 try:
                     male_props = find_male(
-                            image = frame, 
-                            female = settings.female,
-                            arena = settings.arena,
-                            lp_threshold = settings.tight_threshold
+                            image=frame,
+                            female=settings.female,
+                            arena=settings.arena,
+                            lp_threshold=settings.tight_threshold
                             )
                 except NoPropsDetected as NPD:
                     self.progress_log.append(
-                        '\t' + NPD.message + 
+                        '\t' + NPD.message +
                         ' Body @ frame {}'.format(frame_ix)
                         )
                     # male.timestamps[frame_ix] = ts
@@ -1693,13 +1713,13 @@ class BatchTrackingWidget(BatchSettingsWidget):
                     continue
 
                 wing_props = find_wings(
-                        image = frame,
-                        female = settings.female,
-                        arena = settings.arena,
-                        male_props = male_props,
-                        loose_threshold = settings.loose_threshold,
-                        logger = self.progress_log,
-                        frame_ix = frame_ix
+                        image=frame,
+                        female=settings.female,
+                        arena=settings.arena,
+                        male_props=male_props,
+                        loose_threshold=settings.loose_threshold,
+                        logger=self.progress_log,
+                        frame_ix=frame_ix
                     )
                 # if wing_props is None:
                 #     # male.timestamps[frame_ix] = ts
@@ -1771,14 +1791,14 @@ class BatchTrackingWidget(BatchSettingsWidget):
 
     @pyqtSlot(int, int)
     def update_group(self, row, col):
-        """Updates the group attribute in video_settings if a user changes the 
+        """Updates the group attribute in video_settings if a user changes the
         'Group' cell in self.table_widget.
 
         This is a slot for self.table_widget.cellChanged.
 
         Parameters
         ----------
-        row : int 
+        row : int
             Row of cell within self.table_widget that user clicked.
 
         col : int
@@ -1798,14 +1818,14 @@ class BatchTrackingWidget(BatchSettingsWidget):
 
         for row in xrange(len(self.video_settings)):
             items = [
-                QTableWidgetItem(QString(self.video_settings[row].video_file), 0),
-                QTableWidgetItem(QString(self.video_settings[row].save_file), 0),
-                QTableWidgetItem(QString(self.video_settings[row].save_file.split('.')[-1]), 0),
-                QTableWidgetItem(QString(str(self.video_settings[row].tight_threshold)), 0),
-                QTableWidgetItem(QString(str(self.video_settings[row].loose_threshold)), 0),
-                QTableWidgetItem(QString(self.video_settings[row].group), 0)
+                QTableWidgetItem(str(self.video_settings[row].video_file), 0),
+                QTableWidgetItem(str(self.video_settings[row].save_file), 0),
+                QTableWidgetItem(str(self.video_settings[row].save_file.split('.')[-1]), 0),
+                QTableWidgetItem(str(str(self.video_settings[row].tight_threshold)), 0),
+                QTableWidgetItem(str(str(self.video_settings[row].loose_threshold)), 0),
+                QTableWidgetItem(str(self.video_settings[row].group), 0)
             ]
-            
+
             for col, item in enumerate(items):
                 if col == 0 or col == 1:
                     item.setTextAlignment(Qt.AlignRight)
