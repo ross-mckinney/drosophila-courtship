@@ -3,9 +3,12 @@ text.py
 
 Label and text widgets.
 """
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-
+from PyQt5.QtWidgets import (
+    QLabel,
+    QSizePolicy,
+    QWidget,
+    QVBoxLayout
+)
 
 class BatchStepList(QWidget):
     """List displayed to the left of the main Batch widgets to show the

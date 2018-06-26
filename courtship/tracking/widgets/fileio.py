@@ -7,6 +7,7 @@ import os
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QWidget
 
 class FileExplorer(QWidget):
     """Widget for navigating through folders/files.

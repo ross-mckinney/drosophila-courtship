@@ -7,8 +7,18 @@ import os
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtCore import pyqtSlot
+# from PyQt5.QtGui import *
+from PyQt5.QtWidgets import (
+    QDialog,
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QStackedWidget,
+    QStatusBar
+)
 
 from ..widgets.batch import (
     StackedStepWidget,

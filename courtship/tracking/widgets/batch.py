@@ -11,8 +11,26 @@ from datetime import datetime
 
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt, QSize)
+from PyQt5.QtGui import (QPixmap)
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QDialogButtonBox,
+    QFileDialog,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QWidget
+)
 from skimage.color import (
     rgb2gray,
     gray2rgb

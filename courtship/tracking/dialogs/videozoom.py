@@ -9,6 +9,7 @@ from skimage.transform import resize
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QDialog
 
 # from ..widgets.video import *
 

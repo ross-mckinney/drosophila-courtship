@@ -14,6 +14,7 @@ from skimage.draw import (
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QWidget
 
 from ..drawing import draw_tracked_wings
 from ..dialogs.videozoom import ZoomedVideo

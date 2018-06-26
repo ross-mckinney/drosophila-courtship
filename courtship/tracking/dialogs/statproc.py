@@ -16,15 +16,16 @@ from pyqtgraph import PlotItem, PlotWidget, mkPen
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QMainWindow
 
 from ...ts import FixedCourtshipTrackingSummary as FCTS
 
 from ..widgets.statistics import StatProcessingWindowWidget
 from ..widgets.video import MainVideoPlayer
 
-import canal.statistics.centroid as centroid_stats
-import canal.statistics.social as social_stats
-import canal.statistics.wing as wing_stats
+import courtship.stats.centroid as centroid_stats
+import courtship.stats.social as social_stats
+import courtship.stats.wing as wing_stats
 
 
 class StatProcessing(QMainWindow):
