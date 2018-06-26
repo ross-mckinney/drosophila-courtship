@@ -11,3 +11,4 @@ import courtship.ts as ts
 import courtship.tracking.arena as trk_arena
 import courtship.tracking.female as trk_female
 import courtship.tracking.tracking as trk_track
+import courtship.tracking.entry as entry
