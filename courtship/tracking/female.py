@@ -105,7 +105,7 @@ class Female(QObject):
             self.center[1],
             self.min_ax_rad,
             self.maj_ax_rad,
-            rotation=(self.orientation * np.pi/180),
+            rotation=-(self.orientation * np.pi/180),
             shape=self.arena.background_image.shape
         )
         return rr, cc
@@ -131,12 +131,18 @@ class Female(QObject):
         image = gray2rgb(image)
         assert image.dtype == np.uint8, "image is not of type uint8"
 
+        if self.maj_ax_rad <= 1:
+            return image
+
         rr, cc = ellipse_perimeter(
             self.center[0],
             self.center[1],
             self.min_ax_rad,
             self.maj_ax_rad,
-            orientation=-(self.orientation * np.pi/180),
+            orientation=(self.orientation * np.pi/180), # Negating this value 
+                                                        # gives good results in test_trk_female.py
+                                                        # but leads to improperly oriented ellipse in 
+                                                        # the gui display.
             shape=self.arena.background_image.shape
         )
         ellipse_outline_mask = np.zeros_like(self.arena.background_image)
