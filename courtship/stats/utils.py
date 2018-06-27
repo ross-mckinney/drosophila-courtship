@@ -82,3 +82,12 @@ def remove_outliers(d):
                 continue
             clean_d[group_name].append(val)
     return clean_d
+
+
+def is_numeric(val):
+    """Checks whether a value is of a numeric type."""
+    return type(val) in [int, float, long, complex]
+
+def is_array_like(val):
+    """Checks whether a value is array-like (either numpy.ndarray or list)."""
+    return type(val) in [list, np.ndarray]
