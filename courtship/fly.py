@@ -205,6 +205,7 @@ class Fly(object):
         self.body = Body()
         self.right_wing = Wing()
         self.left_wing = Wing()
+        self.n_frames = None
         self.behaviors = []
 
     def init_params(self, size):
@@ -221,6 +222,7 @@ class Fly(object):
             following parameters:
                 body, left_wing and right_wing.
         """
+        self.n_frames = size
         self.body.init_params(size)
         self.left_wing.init_params(size)
         self.right_wing.init_params(size)
