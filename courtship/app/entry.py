@@ -11,7 +11,7 @@ import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt)
-from PyQt5.QtGui import (QIcon, QKeySequence, QPixmap)
+from PyQt5.QtGui import (QIcon, QKeySequence, QPixmap, QCursor)
 from PyQt5.QtWidgets import (
     QAction,
     QActionGroup,
@@ -227,7 +227,7 @@ class MainWindow(QMainWindow):
             menu=self.video_menu,
             name='Zoom',
             connection=self.zoom,
-            status_tip='Zoom in on a segement of video.',
+            status_tip='Zoom in on a segment of video.',
             return_action=True
         )
         self.video_zoom_enabled = False
@@ -343,7 +343,7 @@ class MainWindow(QMainWindow):
                 caption='Open Tracking Summary File',
                 filter='Tracking Summary File (*.fcts *.xlsx)',
                 directory=self.root_folder
-                ))
+                )[0])
 
         if not os.path.isfile(fcts_fname):
             self.logger.warning('Passed `fcts_fname` was not valid (in ' +
@@ -359,8 +359,8 @@ class MainWindow(QMainWindow):
         else:
             return
 
-        if os.path.exists(tracking_summary.video_file):
-            self.video_player.set_video(tracking_summary.video_file)
+        if os.path.exists(tracking_summary.video.filename):
+            self.video_player.set_video(tracking_summary.video.filename)
         else:
             if not isinstance(video_fname, str):
                 file_dialog = QFileDialog(self)

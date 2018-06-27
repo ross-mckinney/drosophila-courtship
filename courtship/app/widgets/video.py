@@ -91,6 +91,8 @@ class BaseVideoPlayer(QWidget):
         self.playback_speed = 1
         self.frame_rate = 24
         self.frame_label = QLabel()
+        # self.frame_label.setScaledContents(True)      # TODO: Make videos scaled & set init
+                                                        # size to 640x480.
         self.image_annotation = False
         self.tracking_summary = None
         self.zoom_enabled = False
@@ -237,7 +239,7 @@ class BaseVideoPlayer(QWidget):
 
         rr, cc = get_mouse_coords(event)
         self.zoom_coords = [[rr, cc]]
-        print self.zoom_coords[0]
+        # print self.zoom_coords[0]
         # print 'Mouse press @ ({},{})'.format(rr, cc)
 
     def mouseMoveEvent(self, event):

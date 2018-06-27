@@ -11,7 +11,7 @@ from datetime import datetime
 
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
-from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt, QSize)
+from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt, QSize, QThread)
 from PyQt5.QtGui import (QPixmap)
 from PyQt5.QtWidgets import (
     QComboBox,
@@ -1604,6 +1604,7 @@ class BatchTrackingWidget(BatchSettingsWidget):
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget, 0, 0, 1, 5)
 
+    # TODO: Move track onto a thread by itself.
     def track(self):
         """Main function to track all flies, and save as appropriate file type."""
         for ix in xrange(len(self.video_settings)):
@@ -1834,3 +1835,13 @@ class BatchTrackingWidget(BatchSettingsWidget):
                 self.table_widget.setItem(row, col, item)
 
 
+class TrackingThread(QThread):
+    """Worker thread to run tracking algorithm."""
+    next_video = pyqtSignal(int) 
+    frame_progress = pyqtSignal(int, int) 
+
+    def __init__(self, video_settings):
+        self.video_settings = video_settings
+    
+    def track(self):
+        pass

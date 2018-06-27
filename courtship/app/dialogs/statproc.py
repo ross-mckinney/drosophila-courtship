@@ -61,6 +61,7 @@ class StatProcessing(QMainWindow):
         self.signal_window_connected = False
         self.mean_pen = mkPen('r', width=2)
         self.root_folder = root_folder
+        self.tracking_summary = None
 
         self.menu_bar = QMenuBar(self)
         self.file_menu = self.menu_bar.addMenu('&File')
@@ -196,7 +197,7 @@ class StatProcessing(QMainWindow):
             caption = 'Open Video File',
             filter = 'Video File (*.fmf)',
             directory = self.root_folder,
-            ))
+            )[0])
 
         self.video_widget.set_video(open_name)
         self.video_widget.tracking_summary = self.tracking_summary
