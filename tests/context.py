@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath('..'))
 import courtship.fly as fly
 import courtship.behavior as behavior
 import courtship.ts as ts
-import courtship.tracking.arena as trk_arena
-import courtship.tracking.female as trk_female
-import courtship.tracking.tracking as trk_track
-import courtship.tracking.entry as entry
+import courtship.app.arena as trk_arena
+import courtship.app.female as trk_female
+import courtship.app.tracking as trk_track
+import courtship.app.entry as entry
