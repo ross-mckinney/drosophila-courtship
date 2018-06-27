@@ -11,9 +11,12 @@
 import numpy as np
 
 from _signal import normalize
+from utils import (
+    is_numeric, is_array_like
+)
 import transforms
 
-def angular_velocity(fly):
+def angular_velocity(fly, dt=1.):
     """Calculates the angular velocity of a fly.
 
     This is based off of the fly.orientations attribute and
@@ -21,19 +24,29 @@ def angular_velocity(fly):
 
     Parameters
     ----------
-    fly : Fly object
+    fly : Fly
+    dt : float or 1D array-like of shape [fly.n_frames]
+        If float, this represents the spacing between timepoints (for example,
+        if a fly was tracked from a video at 24 frames per second, the user
+        should pass `dt=1./24`). If this is an array, each value should be the 
+        timepoints at which each frame was tracked.
 
     Returns
     -------
-    angular_velocity : np.ndarray | shape = [fly.n_frames - 1]
+    angular_velocity : np.ndarray | shape = [fly.n_frames]
     """
     orientations = fly.body.orientation
-    timestamps = fly.timestamps
 
-    ang_vel = np.diff(orientations)/np.diff(timestamps).astype(np.float)
+    if is_array_like(dt):
+        dt = np.diff(dt)
+        if dt != (fly.n_frames - 1):
+            raise AttributeError('`dt` must have the same size/length as '+
+                '`fly.n_frames`')
+
+    ang_vel = np.diff(orientations).astype(np.float)/dt
     return np.hstack((0, ang_vel))
 
-def abs_angular_velocity(fly):
+def abs_angular_velocity(fly, timestamps=None):
     """Calculates the absolute value of the angular velocity of a fly.
 
     This is based off of the fly.orientations attribute and
