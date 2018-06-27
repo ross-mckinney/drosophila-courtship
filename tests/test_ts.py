@@ -1,6 +1,6 @@
 # tests for TrackingSummary
 
-import os
+import os, pickle
 import unittest
 
 import numpy as np
@@ -14,4 +14,8 @@ class TestTrackingMeta(unittest.TestCase):
         """Instantiates a couple of sample TrackingSummary objects for use in
         tests."""
         self.tracking_sum = ts.TrackingSummary()
-        
+
+
+if __name__ == '__main__':
+    with open('D:/test_data2/fcts2/test_01.fcts', 'rb') as f:
+        ts = pickle.load(f)
