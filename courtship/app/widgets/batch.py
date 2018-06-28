@@ -44,6 +44,7 @@ from ... import __version__
 from ..arena import CircularArena
 from ..drawing import draw_tracked_wings
 from ..settings import TrackingSettings
+from ..threads import TrackingThread
 from ..tracking import *
 from ..transforms import *
 from ..utils import (
@@ -1574,9 +1575,9 @@ class BatchTrackingWidget(BatchSettingsWidget):
         self.table_widget.cellChanged.connect(self.update_group)
         self.set_progress_log()
 
-        track_button = QPushButton('Track')
-        track_button.clicked.connect(self.track)
-        self.layout.addWidget(track_button, 2, 4, 1, 1)
+        self.track_button = QPushButton('Track')
+        self.track_button.clicked.connect(self.track)
+        self.layout.addWidget(self.track_button, 2, 4, 1, 1)
 
         self.setLayout(self.layout)
 
@@ -1604,191 +1605,16 @@ class BatchTrackingWidget(BatchSettingsWidget):
         self.table_widget = QTableWidget()
         self.layout.addWidget(self.table_widget, 0, 0, 1, 5)
 
-    # TODO: Move track onto a thread by itself.
     def track(self):
         """Main function to track all flies, and save as appropriate file type."""
-        for ix in xrange(len(self.video_settings)):
-            start_time = time.time()
-
-            settings = self.video_settings[ix]
-            video = settings.video
-            n_frames = video.get_n_frames()
-            timestamps = video.get_all_timestamps()
-            fps = (1. / np.mean(np.diff(timestamps)))
-
-            male = Fly()
-            female = Fly()
-            tracking_summary = FixedCourtshipTrackingSummary()
-
-            male.init_params(n_frames)
-            female.init_params(n_frames)
-
-            # tracking_settings = {
-            #     'video_file': current_vid_file,
-            #     'arena_type': 'circular',
-            #     'pixels_per_mm': settings.arena.pixels_to_mm,
-            #     'arena_center_rr': settings.arena.center[0],
-            #     'arena_center_cc': settings.arena.center[1],
-            #     'arena_radius': settings.arena.radius,
-            #     'group': settings.group,
-            #     'tight_threshold': settings.tight_threshold,
-            #     'loose_threshold': settings.loose_threshold,
-            #     'date_tracked': datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
-            #     'tracking_software': 'CourTrack v{}'.format(__version__),
-            #     'arena_size_mm': settings.arena.arena_size
-            # }
-
-            # load video attributes into FixedCourtshipTrackingSummary
-            tracking_summary.video.filename = settings.video_file
-            tracking_summary.video.timestamps = timestamps
-            tracking_summary.video.fps = fps
-            tracking_summary.video.duration_frames = n_frames
-            tracking_summary.video.duration_seconds = (n_frames * 1.) / fps
-            tracking_summary.video.start_time = datetime.fromtimestamp(
-                timestamps[0]).strftime('%Y-%m-%d %H:%M:%S')
-            tracking_summary.video.end_time = datetime.fromtimestamp(
-                timestamps[-1]).strftime('%Y-%m-%d %H:%M:%S')
-            tracking_summary.video.pixels_per_mm = settings.arena.pixels_to_mm
-
-            # load arena attributes into FixedCourtshipTrackingSummary
-            tracking_summary.arena.shape = 'circular'
-            tracking_summary.arena.center_pixel_rr = settings.arena.center[0]
-            tracking_summary.arena.center_pixel_cc = settings.arena.center[1]
-            tracking_summary.arena.radius_mm = settings.arena.radius
-            tracking_summary.arena.diameter_mm = 2 * settings.arena.radius
-
-            # load software attributes into FixedCourtshipTrackingSummary
-            tracking_summary.software.tight_threshold = settings.tight_threshold
-            tracking_summary.software.loose_threshold = settings.loose_threshold
-            tracking_summary.software.date_tracked = datetime.today(
-                ).strftime('%Y-%m-%d %H:%M:%S')
-            tracking_summary.software.version = __version__
-
-            # set the `group` attribute for the FixedCourtshipTrackingSummary
-            tracking_summary.group = settings.group
-
-            # male.video_file = tracking_settings['video_file']
-            # female.video_file = tracking_settings['video_file']
-
-            self.progress_log.append(
-                'Tracking started for video: {} \nStart Time: {}'.format(
-                    settings.video_file,
-                    time.strftime('%H:%M:%S', time.localtime(start_time))
-                ))
-
-            # get the location and region properties that define
-            # the fixed female.
-            f_props, f_head, f_rear = find_female(
-                    image=settings.arena.background_image,
-                    female=settings.female,
-                    lp_threshold=settings.tight_threshold
-                )
-
-            # update female based on props we just found --
-            # this ensures that the ellipse used to mask the female is
-            # not biased by variation in user-defined ellipses.
-            tighten_female_ellipse(
-                    female=settings.female,
-                    female_props=f_props
-                )
-
-            # loop through each frame in the video, and find the male.
-            for frame_ix in xrange(n_frames):
-                frame_ix = long(frame_ix)
-                frame, ts = video.get_frame(frame_ix)
-
-                try:
-                    male_props = find_male(
-                            image=frame,
-                            female=settings.female,
-                            arena=settings.arena,
-                            lp_threshold=settings.tight_threshold
-                            )
-                except NoPropsDetected as NPD:
-                    self.progress_log.append(
-                        '\t' + NPD.message +
-                        ' Body @ frame {}'.format(frame_ix)
-                        )
-                    # male.timestamps[frame_ix] = ts
-                    # female.timestamps[frame_ix] = ts
-                    continue
-
-                wing_props = find_wings(
-                        image=frame,
-                        female=settings.female,
-                        arena=settings.arena,
-                        male_props=male_props,
-                        loose_threshold=settings.loose_threshold,
-                        logger=self.progress_log,
-                        frame_ix=frame_ix
-                    )
-                # if wing_props is None:
-                #     # male.timestamps[frame_ix] = ts
-                #     # female.timestamps[frame_ix] = ts
-                #     continue
-
-                male.body.centroid.row[frame_ix] = male_props.centroid[0]
-                male.body.centroid.col[frame_ix] = male_props.centroid[1]
-                male.body.orientation[frame_ix] = male_props.orientation
-                set_male_props(male, wing_props, frame_ix)
-
-                set_female_props(female, f_props, f_head, f_rear, frame_ix)
-
-                # wing_annotation_img = draw_tracked_wings(
-                # 		image = frame,
-                # 		left_centroid = np.array([
-                # 			male.left_wing.centroid.y[frame_ix],
-                # 			male.left_wing.centroid.x[frame_ix]]),
-                # 		right_centroid = np.array([
-                # 			male.right_wing.centroid.y[frame_ix],
-                # 			male.right_wing.centroid.x[frame_ix]]),
-                # 		head_centroid = np.array([
-                # 			male.body.head.y[frame_ix],
-                # 			male.body.head.x[frame_ix]]),
-                # 		tail_centroid = np.array([
-                # 			male.body.rear.y[frame_ix],
-                # 			male.body.rear.x[frame_ix]]),
-                # 		female_head = f_head,
-                # 		female_rear = f_rear
-                # 	)
-
-                # cv2.imshow('frame', wing_annotation_img)
-                # if cv2.waitKey(1) & 0xFF == ord('q'):
-                # 	break
-
-                percent_complete = (frame_ix + 1.) / n_frames * 100
-                self.tracking_progress.emit(
-                    percent_complete,
-                    'Tracking video {}/{}.'.format(
-                        ix + 1, len(self.video_settings)))
-
-            # update the tracking settings dictionary with male and female items.
-            # tracking_settings.update({'male': male, 'female': female})
-            # tracking_summary.set_attributes(**tracking_settings)
-            tracking_summary.male = male
-            tracking_summary.female = female
-
-            save_file = settings.save_file
-            save_type = save_file.split('.')[-1]
-            if save_type == 'xlsx':
-                tracking_summary.to_xlsx(save_file)
-            elif save_type == 'fcts':
-                with open(save_file, 'wb') as SAVE:
-                    pickle.dump(tracking_summary, SAVE)
-
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            time_hrs = int(elapsed_time / 3600)
-            time_mins = int((elapsed_time - time_hrs * 3600) / 60)
-            time_secs = int(elapsed_time - time_hrs * 3600 - time_mins * 60)
-
-            self.progress_log.append(
-                'End Time: {}\nTotal Time Elapse: {}'.format(
-                    time.strftime('%H:%M:%S', time.localtime(end_time)),
-                    '{:02d}:{:02d}:{:02d}'.format(
-                        time_hrs, time_mins, time_secs))
-                )
-        self.progress_log.append('TRACKING COMPLETE')
+        tracking_thread = TrackingThread(
+            self.video_settings,
+            self.progress_log,
+            self.tracking_progress,
+            self
+            )
+        self.track_button.setEnabled(False)
+        tracking_thread.start()
 
     @pyqtSlot(int, int)
     def update_group(self, row, col):
@@ -1833,15 +1659,3 @@ class BatchTrackingWidget(BatchSettingsWidget):
                 else:
                     item.setTextAlignment(Qt.AlignCenter)
                 self.table_widget.setItem(row, col, item)
-
-
-class TrackingThread(QThread):
-    """Worker thread to run tracking algorithm."""
-    next_video = pyqtSignal(int) 
-    frame_progress = pyqtSignal(int, int) 
-
-    def __init__(self, video_settings):
-        self.video_settings = video_settings
-    
-    def track(self):
-        pass
