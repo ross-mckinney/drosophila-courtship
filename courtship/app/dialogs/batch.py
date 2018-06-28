@@ -7,8 +7,8 @@ import os
 import motmot.FlyMovieFormat.FlyMovieFormat as FMF
 import numpy as np
 
-from PyQt5.QtCore import pyqtSlot
-# from PyQt5.QtGui import *
+from PyQt5.QtCore import (pyqtSlot, Qt)
+from PyQt5.QtGui import (QIcon, QPixmap)
 from PyQt5.QtWidgets import (
     QDialog,
     QFrame,
@@ -30,12 +30,18 @@ from ..widgets.batch import (
     BatchTrackingWidget
 )
 
+DIR = os.path.dirname(__file__)
+
 
 class BatchTrackingDialog(QDialog):
     """Dialog for batch processing videos."""
-    def __init__(self, root_folder, parent = None):
+    def __init__(self, root_folder, parent=None):
         super(BatchTrackingDialog, self).__init__(parent)
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.setWindowTitle('Batch Processing Wizard')
+        app_icon = QIcon(QPixmap(os.path.join(DIR, '..', 'icons', 'logo.png')))
+        self.setWindowIcon(app_icon)
+
         self.step_number = 0
         self.video_settings = []
         self.root_folder = root_folder
