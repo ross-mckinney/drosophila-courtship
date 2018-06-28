@@ -51,6 +51,8 @@ class TrackingThread(QThread):
 
             male.init_params(n_frames)
             female.init_params(n_frames)
+            male.timestamps = timestamps
+            female.timestamps = timestamps
 
             # load video attributes into FixedCourtshipTrackingSummary
             tracking_summary.video.filename = settings.video_file

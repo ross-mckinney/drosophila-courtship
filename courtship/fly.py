@@ -195,6 +195,12 @@ class Fly(object):
     right_wing : Wing object
         Ellipse fitted to right wing of fly.
 
+    n_frames : int
+        Total number of frames in tracked fly.
+
+    timestamps : np.ndarray of shape [n_frames]
+        Timestamps of video from which fly was tracked.
+
     behaviors : list of Behavior
         All behaviors that the fly engaged in during tracking.
     """
@@ -205,6 +211,7 @@ class Fly(object):
         self.body = Body()
         self.right_wing = Wing()
         self.left_wing = Wing()
+        self.timestamps = None
         self.n_frames = None
         self.behaviors = []
 
@@ -223,6 +230,7 @@ class Fly(object):
                 body, left_wing and right_wing.
         """
         self.n_frames = size
+        self.timestamps = np.zeros(size)
         self.body.init_params(size)
         self.left_wing.init_params(size)
         self.right_wing.init_params(size)
