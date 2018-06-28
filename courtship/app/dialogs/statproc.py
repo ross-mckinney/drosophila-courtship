@@ -24,7 +24,7 @@ from ..widgets.statistics import StatProcessingWindowWidget
 from ..widgets.video import MainVideoPlayer
 
 import courtship.stats.centroid as centroid_stats
-import courtship.stats.social as social_stats
+import courtship.stats.spatial as spatial_stats
 import courtship.stats.wing as wing_stats
 
 
@@ -159,8 +159,8 @@ class StatProcessing(QMainWindow):
         lwa, rwa = wing_stats.individual_wing_angles(tracking_summary.male)
         fwa = wing_stats.full_wing_angle(tracking_summary.male)
         wd = wing_stats.wing_distances(tracking_summary.male)
-        nn = social_stats.nearest_neighbor_centroid(tracking_summary.male, tracking_summary.female)
-        n2e, t2e = social_stats.nose_and_tail_to_ellipse(tracking_summary.male, tracking_summary.female)
+        nn = spatial_stats.nearest_neighbor_centroid(tracking_summary.male, tracking_summary.female)
+        n2e, t2e = spatial_stats.nose_and_tail_to_ellipse(tracking_summary.male, tracking_summary.female)
         vel = centroid_stats.centroid_velocity(tracking_summary.male)
         
         self.signal_window.statistics = {
