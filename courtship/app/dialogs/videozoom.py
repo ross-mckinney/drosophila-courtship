@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
 from ..utils import get_q_image
 DIR = os.path.dirname(__file__)
 
+
 class ZoomedVideo(QDialog):
     def __init__(self, video_player=None, parent=None):
         super(ZoomedVideo, self).__init__(parent)
