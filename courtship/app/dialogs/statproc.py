@@ -141,7 +141,7 @@ class StatProcessing(QMainWindow):
                 caption = 'Open Tracking Summary File',
                 filter = 'Tracking Summary File (*.fcts *.xlsx)',
                 directory = self.root_folder
-                ))
+                )[0])
 
         if file_name.split('.')[-1] == 'fcts':
             with open(file_name, 'rb') as f: 

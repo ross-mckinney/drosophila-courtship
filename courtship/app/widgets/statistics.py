@@ -183,6 +183,7 @@ class SelectableWindow(StatisticWindowWidget):
 
         self.window_set = False
 
+        self.statistics = statistics
         self.stat_image_label.mousePressEvent = self.mousePress 
         self.stat_image_label.mouseMoveEvent = self.mouseMove 
         self.stat_image_label.mouseReleaseEvent = self.mouseRelease
@@ -197,10 +198,8 @@ class SelectableWindow(StatisticWindowWidget):
         tracking_summary : FixedCourtshipTrackingSummary object
         """
         self.tracking_summary = tracking_summary
-        self.statistics = self.tracking_summary.behaviors
         if len(self.statistics) > 0:
-            self.n_frames = np.asarray(
-                self.statistics[self.statistics.keys()[0]]).size
+            self.n_frames = self.tracking_summary.video.n_frames
         else:
             self.n_frames = 0
 
@@ -261,7 +260,7 @@ class SelectableWindow(StatisticWindowWidget):
         pass
 
     def wheelMove(self, event):
-        degrees = event.delta() / 8
+        degrees = event.angleDelta().y() / 8
         steps = degrees / 15
         self.update_stat_label(self.current_ix + steps)
         self.scrolled_on_window.emit(self.current_ix + steps)
