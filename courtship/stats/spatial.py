@@ -797,7 +797,7 @@ def relative_position2(fly1, fly2, direction='east'):
     f1 = rotate_coordinates(fly1, fly2, direction=direction)
 
     theta = np.arctan2(
-        f1.body.centroid.y, f1.body.centroid.x
+        f1.body.centroid.row, f1.body.centroid.col
     )
     r = nearest_neighbor_centroid(fly1, fly2)
 
