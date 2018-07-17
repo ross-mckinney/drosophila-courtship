@@ -118,7 +118,8 @@ class TestFlyIO(unittest.TestCase):
             'right_centroid_row',
             'right_major_axis_length',
             'right_minor_axis_length',
-            'right_orientation'
+            'right_orientation',
+            'timestamps'
         ]
 
     def test_to_csv_no_behaviors(self):
@@ -172,24 +173,31 @@ class TestFlyIO(unittest.TestCase):
         """Assure that Fly.from_csv() works when loading Fly data with no
         associated behaviors."""
         # this file contains a fly initilized to contain 20 frames (rows).
-        # the data in the file is an eye-matrix with shape [20, 20].
+        # the first 20x20 rowsxcolumns are an eye-matrix with shape.
+        # the last column are fake timestamps.
         filename = 'data/test-fly-no-behaviors-01.csv'
         test_fly = fly.Fly().from_csv(filename)
         test_fly_df = test_fly.to_df()
 
-        np.testing.assert_array_equal(test_fly_df.values, np.eye(20))
+        np.testing.assert_array_equal(test_fly_df.values[:, :20], np.eye(20))
+        np.testing.assert_array_equal(
+            test_fly.timestamps, test_fly_df.values[:, -1]
+        )
 
     def test_from_csv_behaviors(self):
         """Assure that Fly.from_csv() works when loading Fly data with
         associated behaviors."""
         # this file contains a fly initialized to contain 22 frames (rows).
         # it contains two behaviors called 'b1' and 'b2'; and the
-        # data in the file is an eye-matrix with shape [22, 22].
+        # data in the file is an (almost) eye-matrix with shape [22, 23];
+        # column 20 contains fake timestamps from 1..22.
         filename = 'data/test-fly-behaviors-01.csv'
         test_fly = fly.Fly().from_csv(filename)
         test_fly_df = test_fly.to_df()
 
-        np.testing.assert_array_equal(test_fly_df.values, np.eye(22))
+        i_matrix = np.eye(22)
+        i_matrix = np.insert(i_matrix, 20, np.arange(1, 23), axis=1)
+        np.testing.assert_array_equal(test_fly_df.values, i_matrix)
 
         b1_expected = np.zeros(22)
         b2_expected = np.zeros(22)
@@ -200,9 +208,13 @@ class TestFlyIO(unittest.TestCase):
         np.testing.assert_array_equal(
             b2_expected, test_fly.behaviors[1].as_array())
 
+        np.testing.assert_array_equal(
+            test_fly.timestamps, np.arange(1,23)
+        )
+
 
 class TestFlyBehaviorFunctions(unittest.TestCase):
-    """Tests functions related to getting behvaiors from Fly."""
+    """Tests functions related to getting behaviors from Fly."""
     def test_get_behavior1(self):
         """Assures that fly.get_behavior() works with valid behavior name."""
         filename = 'data/test-fly-behaviors-01.csv'
