@@ -112,7 +112,7 @@ class Ellipse(object):
         key_string : string
             String to add to all keys within d.
         add_to_dict : dictionary
-            Dicitionary
+            Dictionary
         """
         updated_dict = dict()
         for key, val in add_to_dict.iteritems():
@@ -363,6 +363,14 @@ class Fly(object):
                     behavior_name,
                     fly_df[colname].values)
                 fly.behaviors.append(new_behavior)
+            elif col_id[0] == 'timestamps':
+                fly.timestamps = fly_df[colname].values
+            else:
+                print (
+                    'UserWarning: Column - {} -'.format(colname) + 
+                    ' found in passed data frame. This column has no ' +
+                    ' associated attribute in Fly object. Skipping.'
+                )
 
         return fly
 
@@ -402,7 +410,8 @@ class Fly(object):
            18. right_major_axis_length
            19. right_minor_axis_length
            20. right_orientation
-           21. behavior_<behavior_1_name> (optional)
+           21. timestamps
+           22. behavior_<behavior_1_name> (optional)
                         .
                         .
                         .
@@ -434,7 +443,15 @@ class Fly(object):
             'right_' + c_name for c_name in right_wing_params.columns.values
         ]
 
-        to_concat = [body_params, left_wing_params, right_wing_params]
+        timestamps = pd.DataFrame()
+        timestamps['timestamps'] = self.timestamps
+
+        to_concat = [
+            body_params, 
+            left_wing_params, 
+            right_wing_params,
+            timestamps
+            ]
 
         if len(self.behaviors) != 0:
             behaviors_df = pd.DataFrame()
