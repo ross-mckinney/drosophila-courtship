@@ -16,41 +16,31 @@ from utils import (
 )
 import transforms
 
-def angular_velocity(fly, dt=1.):
+
+def angular_velocity(fly):
     """Calculates the angular velocity of a fly.
 
     This is based off of the fly.orientations attribute and
-    will be a signed value between -np.pi/2 and np.pi/2
+    will be a signed value between -np.pi/2 and np.pi/2.
 
     Parameters
     ----------
     fly : Fly
-    dt : float or 1D array-like of shape [fly.n_frames]
-        If float, this represents the spacing between timepoints (for example,
-        if a fly was tracked from a video at 24 frames per second, the user
-        should pass `dt=1./24`). If this is an array, each value should be the 
-        timepoints at which each frame was tracked.
 
     Returns
     -------
     angular_velocity : np.ndarray | shape = [fly.n_frames]
     """
     orientations = fly.body.orientation
-
-    if is_array_like(dt):
-        dt = np.diff(dt)
-        if dt != (fly.n_frames - 1):
-            raise AttributeError('`dt` must have the same size/length as '+
-                '`fly.n_frames`')
-
-    ang_vel = np.diff(orientations).astype(np.float)/dt
+    ang_vel = np.diff(orientations).astype(np.float)/np.diff(fly.timestamps)
     return np.hstack((0, ang_vel))
 
-def abs_angular_velocity(fly, timestamps=None):
+
+def abs_angular_velocity(fly):
     """Calculates the absolute value of the angular velocity of a fly.
 
     This is based off of the fly.orientations attribute and
-    will be a positive float between 0 and np.pi/2
+    will be a positive float between 0 and np.pi/2.
 
     Parameters
     ----------
@@ -62,13 +52,13 @@ def abs_angular_velocity(fly, timestamps=None):
     """
     return np.abs(angular_velocity(fly))
 
+
 def centroid_to_arena_edge(fly, arena_center, arena_radius):
     """Calculates the distance from the fly to the edge of the arena.
 
     Parameters
     ----------
-    fly : couranal.objects.Fly object
-        Fly
+    fly : Fly
 
     arena_center : length-2 tuple (int, int)
         Coordinates specifying the center of the arena (rr, cc). These are pixel
@@ -93,19 +83,20 @@ def centroid_to_arena_edge(fly, arena_center, arena_radius):
         )
     return dists
 
-def centroid_velocity(fly, normalized = False):
+
+def centroid_velocity(fly, normalized=False):
     """Calculates the velocity of a fly based of the movement of its centroid.
 
     Parameters
     ----------
     fly : Fly object
 
-    normalized : boolean (default = False)
+    normalized : boolean (default=False)
         Whether or not the velocity should be normalized to its mean.
 
     Returns
     -------
-    centroid_velocity : np.ndarray | shape = [fly.n_frames - 1]
+    centroid_velocity : np.ndarray | shape = [fly.n_frames]
     """
     centroids = fly.body.centroid.coords()
     squared_differences = np.diff(centroids, axis=0) ** 2
@@ -118,12 +109,13 @@ def centroid_velocity(fly, normalized = False):
 
     return velocity
 
+
 def component_velocities(fly):
     """Finds component velocities of the centroid w.r.t. the fly's heading vector.
 
     Parameters
     ----------
-    fly : Fly object.
+    fly : Fly
 
     Returns
     -------
@@ -186,15 +178,16 @@ def component_velocities(fly):
 
     return v_th, v_ph
 
-def change_in_major_axis_length(fly, normalized = False):
+
+def change_in_major_axis_length(fly, normalized=False):
     """Calculates the first derivative of the length
     of the major axis of the ellipse fitted to a fly.
 
     Parameters
     ----------
-    fly : Fly object
+    fly : Fly
 
-    normalized : boolean (default = False)
+    normalized : boolean (default=False)
         Whether or not the first derivative should be normalized to its mean.
 
     Returns
@@ -208,7 +201,8 @@ def change_in_major_axis_length(fly, normalized = False):
         return normalize(d_maj_ax_len)
     return d_maj_ax_len
 
-def change_in_minor_axis_length(fly, normalized = False):
+
+def change_in_minor_axis_length(fly, normalized=False):
     """Calculates the first derivative of the length
     of the minor axis of the ellipse fitted to a fly.
 
@@ -216,7 +210,7 @@ def change_in_minor_axis_length(fly, normalized = False):
     ----------
     fly : Fly object
 
-    normalized : boolean (default = False)
+    normalized : boolean (default=False)
         Whether or not the first derivative should be normalized to its mean.
 
     Returns
@@ -230,7 +224,8 @@ def change_in_minor_axis_length(fly, normalized = False):
         return normalize(d_min_ax_len)
     return d_min_ax_len
 
-def change_in_area(fly, normalized = False):
+
+def change_in_area(fly, normalized=False):
     """Calculates the first derivative of the area
     of the ellipse fitted to a fly.
 
@@ -238,7 +233,7 @@ def change_in_area(fly, normalized = False):
     ----------
     fly : Fly object
 
-    normalized : boolean (default = False)
+    normalized : boolean (default=False)
         Whether or not the first derivative should be normalized to its mean.
 
     Returns
@@ -251,6 +246,7 @@ def change_in_area(fly, normalized = False):
     if normalized:
         return normalize(d_area)
     return d_area
+
 
 if __name__ == '__main__':
     pass
