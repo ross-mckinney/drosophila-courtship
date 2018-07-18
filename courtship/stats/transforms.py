@@ -25,7 +25,7 @@ def _get_heading_vector(fly):
     heading_vectors : np.array of shape [N, 2].
         Heading vector of fly in each frame.
     """
-    return fly.body.head.coords() - fly.body.rear.coords()
+    return fly.body.head.coords_xy() - fly.body.rear.coords_xy()
 
 
 def _rotate(angle, coords):
@@ -186,10 +186,10 @@ def rotate_coordinates(fly1, fly2, direction='east'):
         for point in point_list:
             coords = _rgetattr(
                     fly1_copy,'{}.{}'.format(part_name, point)
-                ).coords()
+                ).coords_xy()
 
             # Make sure to center all coordinates w.r.t. the centroid of fly2.
-            coords = coords - fly2.body.centroid.coords()
+            coords = coords - fly2.body.centroid.coords_xy()
 
             rotated_coords = _rotate(theta, coords)
             for i, xy in enumerate(['x', 'y']):

@@ -539,8 +539,8 @@ def nearest_neighbor_centroid(fly1, fly2, normalized = False):
     distances : np.ndarray | shape = [fly1.n_frames]
         Centroid-to-centroid distances between fly1 and fly2.
     """
-    fly1_centroids = fly1.body.centroid.coords()
-    fly2_centroids = fly2.body.centroid.coords()
+    fly1_centroids = fly1.body.centroid.coords_xy()
+    fly2_centroids = fly2.body.centroid.coords_xy()
 
     distances = np.sqrt(
         (fly1_centroids[:,0] - fly2_centroids[:,0])**2 +
@@ -659,10 +659,10 @@ def nose_and_tail_to_ellipse(fly1, fly2, normalized = False):
     """
     n2e = np.zeros(fly1.n_frames)
     t2e = np.zeros(fly1.n_frames)
-    male_nose = fly1.body.head.coords()
-    male_tail = fly1.body.rear.coords()
+    male_nose = fly1.body.head.coords_xy()
+    male_tail = fly1.body.rear.coords_xy()
 
-    female_centroid = fly2.body.centroid.coords()[1,:]
+    female_centroid = fly2.body.centroid.coords_xy()[1,:]
     female_orientation = fly2.body.orientation[1]
     female_maj_axis = fly2.body.major_axis_length[1] / 2.
     female_min_axis = fly2.body.minor_axis_length[1] / 2.
@@ -726,20 +726,20 @@ def relative_position(fly1, fly2):
         Distance from fly1 to fly2.
     """
 
-    if np.sum(fly2.body.head.coords()[:,0]) == 0:
+    if np.sum(fly2.body.head.coords_xy()[:,0]) == 0:
         print "Female head & tail positions have not been defined. Aborting."
         return
 
-    female_nose = fly2.body.head.coords()[0,:][::-1]
-    female_tail = fly2.body.rear.coords()[0,:][::-1]
+    female_nose = fly2.body.head.coords_xy()[0,:][::-1]
+    female_tail = fly2.body.rear.coords_xy()[0,:][::-1]
 
-    female_centroids = fly2.body.centroid.coords()
+    female_centroids = fly2.body.centroid.coords_xy()
     female_heading_vector = female_nose - female_tail
     female_heading_vector = np.hstack(
         (female_heading_vector[0], -1 * female_heading_vector[1])
         )
 
-    male_centroids = fly1.body.centroid.coords() #note that this is (y,x);
+    male_centroids = fly1.body.centroid.coords_xy() #note that this is (y,x);
     shape = male_centroids.shape
     male_centroids = male_centroids - female_centroids
     male_centroids = np.hstack((male_centroids[:,1],male_centroids[:,0]))

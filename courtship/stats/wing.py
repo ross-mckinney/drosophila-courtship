@@ -54,9 +54,9 @@ def full_wing_angle(fly):
 		Angles (in radians) made between the connected vertices: fly.left_wing >
 		fly.centroid > fly.right_wing.
 	"""
-	centroids = fly.body.centroid.coords()
-	l_wing = fly.left_wing.centroid.coords()
-	r_wing = fly.right_wing.centroid.coords()
+	centroids = fly.body.centroid.coords_xy()
+	l_wing = fly.left_wing.centroid.coords_xy()
+	r_wing = fly.right_wing.centroid.coords_xy()
 
 	a, b, c = _distances(l_wing, r_wing, centroids)
 	thetas = np.arccos((a**2 + b**2 - c**2)/(2*a*b))
@@ -78,10 +78,10 @@ def individual_wing_angles(fly):
 	right_thetas : np.ndarray | shape = [fly.n_frames]
 		Angle (in radians) between right wing and x-axis.
 	"""
-	centroids = fly.body.centroid.coords()
+	centroids = fly.body.centroid.coords_xy()
 	#subtract off the centroids (ie make origin), so that we are rotating around the origin.
-	l_wing = fly.left_wing.centroid.coords() - centroids
-	r_wing = fly.right_wing.centroid.coords() - centroids
+	l_wing = fly.left_wing.centroid.coords_xy() - centroids
+	r_wing = fly.right_wing.centroid.coords_xy() - centroids
 	rotations = fly.body.rotation_angle
 
 	rot_l = np.zeros_like(l_wing) #shape = [N, 2]
@@ -112,9 +112,9 @@ def wing_distances(fly):
 		Distance (in pixels) between fly.left_wing and fly.right_wing for 
 		each frame.
 	"""
-	centroids = fly.body.centroid.coords()
-	l_wing = fly.left_wing.centroid.coords()
-	r_wing = fly.right_wing.centroid.coords()
+	centroids = fly.body.centroid.coords_xy()
+	l_wing = fly.left_wing.centroid.coords_xy()
+	r_wing = fly.right_wing.centroid.coords_xy()
 
 	d = _distances(l_wing, r_wing, centroids)
 	return d[2]

@@ -72,7 +72,7 @@ def centroid_to_arena_edge(fly, arena_center, arena_radius):
     distance_from_edge : int
         Distance (in pixels) fly is from edge of circular arena.
     """
-    b_center = fly.body.centroid.coords()
+    b_center = fly.body.centroid.coords_xy()
     if isinstance(arena_center, tuple):
         arena_center = np.array(arena_center)
     else:
@@ -98,9 +98,9 @@ def centroid_velocity(fly, normalized=False):
     -------
     centroid_velocity : np.ndarray | shape = [fly.n_frames]
     """
-    centroids = fly.body.centroid.coords()
+    centroids = fly.body.centroid.coords_xy()
     squared_differences = np.diff(centroids, axis=0) ** 2
-    distance_traveled = np.sqrt(np.sum(squared_differences, axis = 1))
+    distance_traveled = np.sqrt(np.sum(squared_differences, axis=1))
     velocity = distance_traveled / np.diff(fly.timestamps).astype(np.float)
     velocity = np.hstack((0, velocity))
 
@@ -127,11 +127,15 @@ def component_velocities(fly):
         Velocity - in pixel units - that is parallel to the heading vector.
         This is the forward/reverse velocity of the fly.
     """
+    body_coords = fly.body.centroid.coords_xy()
+    head_coords = fly.body.head.coords_xy()
+    rear_coords = fly.body.rear.coords_xy()
+
     # find the velocity vector
-    v = np.gradient(fly.body.centroid.coords())[0]
+    v = np.gradient(body_coords)[0]
 
     # and the heading vector
-    h = fly.body.head.coords() - fly.body.rear.coords()
+    h = head_coords - rear_coords
 
     # find the angle between the two vectors using the cos formula
     # cos (theta) = (h . v) / (||h|| x ||v||)
