@@ -11,9 +11,6 @@
 import numpy as np
 
 from _signal import normalize
-from utils import (
-    is_numeric, is_array_like
-)
 import transforms
 
 
