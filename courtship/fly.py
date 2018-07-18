@@ -171,7 +171,7 @@ class Body(Ellipse):
     rotation_angle : np.ndarray or None (default = None)
         Angle (from 0 to 2*np.pi) needed to rotate Ellipse such that
         the ellipse is oriented with the rear-to-head axis pointing
-        to the right along the Cartesian x-axis.
+        to the right along the Cartesian x-axis. Clockwise or counter?
 
     head : Point object
         Coordinates of head of ellipse.
