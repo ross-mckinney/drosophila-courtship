@@ -14,5 +14,6 @@ import courtship.app.female as trk_female
 import courtship.app.tracking as trk_track
 import courtship.app.entry as entry
 
-
 import courtship.stats.centroid as centroid
+import courtship.stats.spatial as spatial
+import courtship.stats.transforms as transforms

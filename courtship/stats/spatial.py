@@ -25,8 +25,8 @@ from transforms import rotate_coordinates
 def summarize_behavior(
     tracking_summaries,
     behavior_name,
-    frm = 0.0,
-    to = 1.0,
+    frm=0.0,
+    to=1.0,
     statistic=pysum.mean
     ):
     """Calculates a summary statistic on behaviors held within a list of
@@ -53,7 +53,7 @@ def summarize_behavior(
         Percentage of frames to stop calculating summary statistic on. This
         ranges from 0 to 1, and must be greater than start_pct.
 
-    statistic : function (default = pycircstat.descriptive.mean)
+    statistic : function (default=pycircstat.descriptive.mean)
         Statistical function to calculate on behavioral locations.
 
     Returns
@@ -70,18 +70,13 @@ def summarize_behavior(
 
     stats = []
     for ts in tracking_summaries:
-        if behavior_name not in ts.behaviors.keys():
-            raise NameError(
-            'behavior_name is not in tracking_summary behaviors dict.'
-            )
-
-        classifications = ts.behaviors[behavior_name]
+        classifications = ts.male.get_behavior(behavior_name).as_array()
         n_frames = classifications.size
 
         low_ix = int(n_frames * frm)
         high_ix = int(n_frames * to)
 
-        theta, r = relative_position(ts.male, ts.female)
+        theta, r = relative_position2(ts.male, ts.female)
         behaving_ix = np.where(classifications[low_ix:high_ix])[0]
 
         if theta.size == 0:
@@ -92,7 +87,7 @@ def summarize_behavior(
     return np.array(stats)
 
 
-def compiled_locations(tracking_summaries, behavior_name, r_in_mm = True):
+def compiled_locations(tracking_summaries, behavior_name, r_in_mm=True):
     """Compiles locations from behaviors held within a list of
     tracking summaries.
 
@@ -119,23 +114,24 @@ def compiled_locations(tracking_summaries, behavior_name, r_in_mm = True):
         second column is either y or r.
     """
     n_rows = np.sum(
-        [np.where(ts.behaviors[behavior_name])[0].size
+        [np.where(ts.male.get_behavior(behavior_name).as_array())[0].size
         for ts in tracking_summaries]
         )
-    locations = np.zeros(shape = (n_rows, 2))
+    locations = np.zeros(shape=(n_rows, 2))
 
     start_ix = 0
     for ts in tracking_summaries:
-        n_rows = np.where(ts.behaviors[behavior_name])[0].size
-        theta, r = relative_position(ts.male, ts.female)
+        behavior_arr = ts.male.get_behavior(behavior_name).as_array()
+        n_rows = np.where(behavior_arr)[0].size
+        theta, r = relative_position2(ts.male, ts.female)
 
         if r_in_mm:
             r = nearest_neighbor_centroid(
-                ts.male, ts.female, normalized = False
-                ) / ts.pixels_per_mm
+                ts.male, ts.female, normalized=False
+                ) / ts.video.pixels_per_mm
 
-        thetas = theta[np.where(ts.behaviors[behavior_name])[0]]
-        rs = r[np.where(ts.behaviors[behavior_name])[0]]
+        thetas = theta[np.where(behavior_arr)[0]]
+        rs = r[np.where(behavior_arr)[0]]
         locations[start_ix:start_ix + n_rows, 0] = thetas
         locations[start_ix:start_ix + n_rows, 1] = rs
         start_ix += n_rows
@@ -170,7 +166,7 @@ def _bin_circular(
     behavior_name : string or None (default=None)
         This should be a valid key in tracking_summary.behaviors. The
         returned statistic will only be calculated for positions where the
-        male is behaving. If None, the statisitc will be calculated across all
+        male is behaving. If None, the statistic will be calculated across all
         frames.
 
     bins : int or None (default=50)
@@ -190,19 +186,13 @@ def _bin_circular(
     if behavior_name is None:
         b_ixs = np.ones(tracking_summary.male.n_frames)
     else:
-        if behavior_name not in tracking_summary.behaviors.keys():
-            raise AttributeError(
-                'behavior_name was not found in tracking_summary.' +
-                'behaviors keys. Please make sure to pass a valid behavior ' +
-                'name (or None).'
-                )
-        b_ixs = tracking_summary.behaviors[behavior_name]
+        b_ixs = tracking_summary.male.get_behavior(behavior_name).as_array()
 
     # Make sure that there are at least some valid behavioral locations.
     # Otherwise, return an array of NaNs.
     if np.sum(b_ixs) == 0:
         warnings.warn(
-            'No behaivoral indicies found for video:' +
+            'No behavioral indices found for video:' +
             '{} '.format(os.path.basename(tracking_summary.video_file)) +
             'NaNs have been returned.'
             )
@@ -218,7 +208,7 @@ def _bin_circular(
     # Calculate the passed statistic
     stat = statistic(tracking_summary.male, tracking_summary.female, **kwargs)
 
-    # Limit the our 'view' of the statistic to only those frames containing
+    # Limit our 'view' of the statistic to only those frames containing
     # the passed behavior.
     theta = theta[np.flatnonzero(b_ixs)]
     stat = stat[np.flatnonzero(b_ixs)]
@@ -267,7 +257,7 @@ def binned_centroid_to_centroid(ts, behavior_name=None, bins=50):
         nearest_neighbor_centroid,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm
+    ) / ts.video.pixels_per_mm
 
 
 def binned_head_to_ellipse(ts, behavior_name=None, bins=50):
@@ -303,7 +293,7 @@ def binned_head_to_ellipse(ts, behavior_name=None, bins=50):
         head_to_ellipse,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm
+    ) / ts.video.pixels_per_mm
 
 
 def binned_forward_velocity(ts, behavior_name=None, bins=50):
@@ -338,7 +328,7 @@ def binned_forward_velocity(ts, behavior_name=None, bins=50):
         forward_velocity,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm * ts.fps
+    ) / ts.video.pixels_per_mm * ts.video.fps
 
 
 def binned_sideways_velocity(ts, behavior_name=None, bins=50):
@@ -360,7 +350,7 @@ def binned_sideways_velocity(ts, behavior_name=None, bins=50):
 
     Returns
     -------
-    sideways_velocity : np.ndarry of shape [ts.male.n_frames]
+    sideways_velocity : np.ndarray of shape [ts.male.n_frames]
         Sideways velocity of the male fly in each bin surrounding female.
         Note that the returned velocity units are mm/second.
     """
@@ -373,7 +363,7 @@ def binned_sideways_velocity(ts, behavior_name=None, bins=50):
         sideways_velocity,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm * ts.fps
+    ) / ts.video.pixels_per_mm * ts.video.fps
 
 
 def binned_abs_sideways_velocity(ts, behavior_name=None, bins=50):
@@ -408,7 +398,7 @@ def binned_abs_sideways_velocity(ts, behavior_name=None, bins=50):
         sideways_velocity,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm * ts.fps
+    ) / ts.video.pixels_per_mm * ts.video.fps
 
 
 def binned_rear_to_ellipse(ts, behavior_name=None, bins=50):
@@ -444,7 +434,7 @@ def binned_rear_to_ellipse(ts, behavior_name=None, bins=50):
         rear_to_ellipse,
         behavior_name=behavior_name,
         bins=bins
-    ) / ts.pixels_per_mm
+    ) / ts.video.pixels_per_mm
 
 
 def binned_relative_heading(ts, behavior_name=None, bins=50):
@@ -475,6 +465,7 @@ def binned_relative_heading(ts, behavior_name=None, bins=50):
             f1_headings[:, 1], f1_headings[:, 0]
         )
         return oris
+
     return _bin_circular(
         ts,
         relative_angular_orientation,
@@ -517,7 +508,7 @@ def binned_angular_velocity(
     pass
 
 
-def nearest_neighbor_centroid(fly1, fly2, normalized = False):
+def nearest_neighbor_centroid(fly1, fly2, normalized=False):
     """Finds the centroid-to-centroid distance to a Fly's nearest neighbor.
 
     Flies should be tracked from within the same movie.
@@ -574,7 +565,7 @@ def normalized_nearest_neighbor_centroid(fly1, fly2):
         normalized to mean area of fly1.
     """
 
-    distances = nearest_neighbor_centroid(fly1, fly2, normalized = False)
+    distances = nearest_neighbor_centroid(fly1, fly2, normalized=False)
     mean_area = np.mean(fly1.body.area)
 
     return distances.astype(np.float) / mean_area
