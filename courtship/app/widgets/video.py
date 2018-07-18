@@ -142,10 +142,10 @@ class BaseVideoPlayer(QWidget):
                 try:
                     img = draw_tracked_wings(
                             image=self.video.get_frame(self.current_frame_ix)[0],
-                            left_centroid=self.tracking_summary.male.left_wing.centroid.coords()[self.current_frame_ix, :],
-                            right_centroid=self.tracking_summary.male.right_wing.centroid.coords()[self.current_frame_ix, :],
-                            head_centroid=self.tracking_summary.male.body.head.coords()[self.current_frame_ix, :],
-                            tail_centroid=self.tracking_summary.male.body.rear.coords()[self.current_frame_ix, :]
+                            left_centroid=self.tracking_summary.male.left_wing.centroid.coords_rc()[self.current_frame_ix, :],
+                            right_centroid=self.tracking_summary.male.right_wing.centroid.coords_rc()[self.current_frame_ix, :],
+                            head_centroid=self.tracking_summary.male.body.head.coords_rc()[self.current_frame_ix, :],
+                            tail_centroid=self.tracking_summary.male.body.rear.coords_rc()[self.current_frame_ix, :]
                         )
                 except:
                     img = self.video.get_frame(self.current_frame_ix)[0]
