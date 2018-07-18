@@ -154,7 +154,7 @@ class TestCentroidFunctions(unittest.TestCase):
             np.array([1])
         )
 
-    def test_dmaj_axis_01(self):
+    def test_dmin_axis_01(self):
         """Tests that change_in_minor_axis_length() works with normal data."""
         test_fly = fly.Fly()
         test_fly.init_params(2)
