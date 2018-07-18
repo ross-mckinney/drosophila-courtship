@@ -143,6 +143,44 @@ class TestCentroidFunctions(unittest.TestCase):
             vt, vp
         )
 
+    def test_dmaj_axis_01(self):
+        """Tests that change_in_major_axis_length() works with normal data."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.major_axis_length = np.array([0, 1])
+        test_fly.timestamps = np.array([1, 2])
+        np.testing.assert_array_equal(
+            centroid.change_in_major_axis_length(test_fly),
+            np.array([1])
+        )
+
+    def test_dmaj_axis_01(self):
+        """Tests that change_in_minor_axis_length() works with normal data."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.minor_axis_length = np.array([0, 1])
+        test_fly.timestamps = np.array([1, 2])
+        np.testing.assert_array_equal(
+            centroid.change_in_minor_axis_length(test_fly),
+            np.array([1])
+        )
+
+    def test_darea_01(self):
+        """Tests that change_in_area() works with normal data."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.major_axis_length = np.array([1, 2])
+        test_fly.body.minor_axis_length = np.array([1, 1])
+        test_fly.timestamps = np.array([1,2])
+
+        a0 = np.pi * (0.5*1) * (0.5*1)
+        a1 = np.pi * (0.5*2) * (0.5*1)
+        da = a1 - a0
+        np.testing.assert_array_equal(
+            centroid.change_in_area(test_fly),
+            [da]
+        )
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
