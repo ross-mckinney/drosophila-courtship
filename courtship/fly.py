@@ -27,7 +27,7 @@ class Point(object):
         self.row = None
         self.col = None
 
-    def coords(self):
+    def coords_rc(self):
         """Stacks row and col coordinates into an [N, 2] np.ndarray.
 
         Returns
@@ -37,6 +37,17 @@ class Point(object):
             col-coordinates.
         """
         return np.vstack((self.row, self.col)).T
+
+    def coords_xy(self):
+        """Stacks col and row coordinates into an [N, 2] np.ndarray.
+
+        Returns
+        -------
+        coords_xy : np.ndarray of shape [N, 2].
+            First column contains col-coordinates. Second column contains
+            row-coordinates.
+        """
+        return np.vstack((self.col, self.row)).T
 
 
 class Ellipse(object):
