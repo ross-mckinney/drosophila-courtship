@@ -13,7 +13,7 @@ from context import behavior
 class TestPoint(unittest.TestCase):
     """Tests functions held within Point class."""
     def test_coords(self):
-        """Assure call to Point.coords() returns correct, [N,2] array."""
+        """Assure call to Point.coords_rc() returns correct, [N,2] array."""
         test_point = fly.Point()
 
         test_point.row = np.arange(5)         # [0, 1, 2, 3, 4]
@@ -27,7 +27,7 @@ class TestPoint(unittest.TestCase):
             [4, 0]
         ])
 
-        test_coords = test_point.coords()
+        test_coords = test_point.coords_rc()
         np.testing.assert_array_equal(test_coords, assert_eq_arr)
 
 
