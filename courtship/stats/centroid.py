@@ -241,7 +241,7 @@ def change_in_area(fly, normalized=False):
     -------
     d_area : np.ndarray | shape = [fly.n_frames - 1]
     """
-    area = fly.body.area
+    area = fly.body.area()
     d_area = np.diff(area) / np.diff(fly.timestamps).astype(np.float)
 
     if normalized:
