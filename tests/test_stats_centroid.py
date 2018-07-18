@@ -77,41 +77,72 @@ class TestCentroidFunctions(unittest.TestCase):
             arena_radius - np.sqrt([13, 18])
         )
 
+    def test_component_velocity_01(self):
+        """Checks component_velocity() with (all) movement along parallel axis."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.centroid.row = np.array([0, -1])
+        test_fly.body.centroid.col = np.array([0, 1])
+        test_fly.body.head.row = np.array([-1, -2])
+        test_fly.body.head.col = np.array([1, 2])
+        test_fly.body.rear.row = np.array([1, 0])
+        test_fly.body.rear.col = np.array([-1, 0])
+        test_fly.body.rotation_angle = np.array([45, 45]) * np.pi/180
+        vt, vp = centroid.component_velocities(test_fly)
+        np.testing.assert_allclose(
+            vt,
+            np.array([0, 0]),
+            rtol=1e-5,
+            atol=1e-7
+        )
+        np.testing.assert_allclose(
+            vp,
+            np.array([np.sqrt(2), np.sqrt(2)]),
+            rtol=1e-5,
+            atol=1e-7
+        )
+
+    def test_component_velocity_02(self):
+        """Checks component_velocity() with (all) movement along tangential axis."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.centroid.row = np.array([0, 1])
+        test_fly.body.centroid.col = np.array([0, 1])
+        test_fly.body.head.row = np.array([-1, 0])
+        test_fly.body.head.col = np.array([1, 2])
+        test_fly.body.rear.row = np.array([1, 2])
+        test_fly.body.rear.col = np.array([-1, 0])
+        test_fly.body.rotation_angle = np.array([45, 45]) * np.pi/180
+        vt, vp = centroid.component_velocities(test_fly)
+        np.testing.assert_allclose(
+            vp,
+            np.array([0, 0]),
+            rtol=1e-5,
+            atol=1e-7
+        )
+        np.testing.assert_allclose(
+            np.abs(vt),
+            np.array([np.sqrt(2), np.sqrt(2)]),
+            rtol=1e-5,
+            atol=1e-7
+        )
+
+    def test_component_velocity_03(self):
+        """Checks component_velocity() with equal movement along both axes."""
+        test_fly = fly.Fly()
+        test_fly.init_params(2)
+        test_fly.body.centroid.row = np.array([0, 0])
+        test_fly.body.centroid.col = np.array([0, 1])
+        test_fly.body.head.row = np.array([-1, -1])
+        test_fly.body.head.col = np.array([1, 2])
+        test_fly.body.rear.row = np.array([1, 1])
+        test_fly.body.rear.col = np.array([-1, 0])
+        test_fly.body.rotation_angle = np.array([45, 45]) * np.pi/180
+        vt, vp = centroid.component_velocities(test_fly)
+        np.testing.assert_allclose(
+            vt, vp
+        )
+
 
 if __name__ == '__main__':
-    # unittest.main(verbosity=2)
-    with open('data/test-fly-tracked-01.fcts', 'rb') as f:
-        ts = pickle.load(f)
-
-    test_fly1 = fly.Fly()
-    test_fly1.init_params(5)
-    test_fly1.body.centroid.row = ts.male.body.centroid.row[:5]
-    test_fly1.body.centroid.col = ts.male.body.centroid.col[:5]
-    test_fly1.body.head.row = ts.male.body.head.row[:5]
-    test_fly1.body.head.col = ts.male.body.head.col[:5]
-    test_fly1.body.rear.row = ts.male.body.rear.row[:5]
-    test_fly1.body.rear.col = ts.male.body.rear.col[:5]
-    test_fly1.body.rotation_angle = ts.male.body.rotation_angle[:5]
-
-    test_fly2 = fly.Fly()
-    test_fly2.init_params(5)
-    test_fly2.body.centroid.row = ts.male.body.centroid.col[:5]
-    test_fly2.body.centroid.col = ts.male.body.centroid.row[:5]
-    test_fly2.body.head.row = ts.male.body.head.col[:5]
-    test_fly2.body.head.col = ts.male.body.head.row[:5]
-    test_fly2.body.rear.row = ts.male.body.rear.col[:5]
-    test_fly2.body.rear.col = ts.male.body.rear.row[:5]
-    test_fly2.body.rotation_angle = ts.male.body.rotation_angle[:5]
-
-    vt1, vp1 = centroid.component_velocities(test_fly1)
-    vt2, vp2 = centroid.component_velocities(test_fly2)
-
-    print 'test_fly1:\n\tvt: ',
-    print vt1
-    print '\tvp: ',
-    print vp1 
-
-    print 'test_fly2:\n\tvt: ',
-    print vt2
-    print '\tvp: ',
-    print vp2 
+    unittest.main(verbosity=2)
