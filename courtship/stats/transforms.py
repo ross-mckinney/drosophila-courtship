@@ -17,7 +17,7 @@ def _get_heading_vector(fly):
 
     Parameters
     ----------
-    fly : objects.Fly
+    fly : Fly
         Fly to calculate heading vector for.
 
     Returns
@@ -192,10 +192,10 @@ def rotate_coordinates(fly1, fly2, direction='east'):
             coords = coords - fly2.body.centroid.coords_xy()
 
             rotated_coords = _rotate(theta, coords)
-            for i, xy in enumerate(['x', 'y']):
+            for i, cr in enumerate(['col', 'row']):
                 _rsetattr(
                     fly1_copy,
-                    '{}.{}.{}'.format(part_name, point, xy),
+                    '{}.{}.{}'.format(part_name, point, cr),
                     rotated_coords[:, i]
                 )
     return fly1_copy
