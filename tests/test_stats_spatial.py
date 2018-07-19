@@ -57,8 +57,24 @@ class TestSpatialFunctions(unittest.TestCase):
             atol=0.01
         )
 
+    def test_relative_orientation(self):
+        spatial.relative_orientation(
+            self.test_male,
+            self.test_female
+        )
+
+    def test_abs_reative_orientation(self):
+        spatial.abs_relative_orientation(
+            self.test_male,
+            self.test_female
+        )
+
+    def test_nose_and_tail_to_ellipse(self):
+        spatial.nose_and_tail_to_ellipse(
+            self.test_male,
+            self.test_female
+        )
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-    # test_female = fly.Fly().from_csv('data/test-female-spatial-01.csv')
-    # hv = transforms._get_heading_vector(test_female)
-    # print hv
+

@@ -661,7 +661,7 @@ def nose_and_tail_to_ellipse(fly1, fly2, normalized = False):
     R = np.array([[np.cos(-female_orientation), -np.sin(-female_orientation)],
                   [np.sin(-female_orientation), np.cos(-female_orientation)]])
 
-    #get 200 points that lie along the ellipse
+    # get 200 points that lie along the female ellipse
     t = np.linspace(0, 2 * np.pi, 200)
     cc = female_maj_axis * np.cos(t)
     rr = female_min_axis * np.sin(t)
