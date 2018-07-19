@@ -8,6 +8,8 @@
 """
 import numpy as np
 
+from ..behavior import Behavior
+
 import markov
 import spatial
 
@@ -115,7 +117,8 @@ def bout_boundaries(arr):
 
 
 def bout_boundaries_ts(ts, bname):
-    """Gets the bout boundaries for a specific behavior from a TrackingSummary.
+    """Gets the bout boundaries for a specific behavior from a male within
+    a FixedCourtshipTrackingSummary.
 
     Parameters
     ----------
@@ -132,9 +135,7 @@ def bout_boundaries_ts(ts, bname):
         specified behaviors. Second column is stop of individual bouts of
         behaviors.
     """
-    arr = ts.behaviors[bname]
-    boundaries = bout_boundaries(arr)
-    return boundaries
+    return  ts.male.get_behavior(bname).ixs()
 
 
 def bout_durations(arr):
@@ -298,13 +299,13 @@ def get_transitional_tracks(
     Returns
     -------
     x, y : list, list
-        Each item in the list is an np.ndarry containing the x- and y-
+        Each item in the list is an np.ndarray containing the x- and y-
         coordinates of the transitional tracks. Note that these are
         cartesian coordinates and represent male-to-female centroid-to-centroid
         distances in mm.
     """
-    from_ixs = bout_boundaries_ts(ts, from_behavior)
-    to_ixs = bout_boundaries_ts(ts, to_behavior)
+    from_ixs = ts.male.get_behavior(from_behavior).ixs()
+    to_ixs = ts.male.get_behavior(to_behavior).ixs()
 
     from_ixs_mean = np.mean(from_ixs, axis=1)
     to_ixs_mean = np.mean(to_ixs, axis=1)
@@ -445,8 +446,8 @@ def exclude_behavior_from_courtship_ts(
         Name of behavior. This behavior & behavioral key is now present in the
         TrackingSummary.
     """
-    courtship = ts.behaviors[courtship_behavior].copy()
-    exclude = ts.behaviors[exclude_behavior]
+    courtship = ts.male.get_behavior(courtship_behavior).as_array()
+    exclude = ts.male.get_behavior(exclude_behavior).as_array()
 
     # where courtship and exclude behaviors overlap
     courtship[np.where(exclude)] = 0
