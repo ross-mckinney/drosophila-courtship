@@ -383,6 +383,7 @@ class Fly(object):
                     ' associated attribute in Fly object. Skipping.'
                 )
 
+        fly.n_frames = fly_df.shape[0]
         return fly
 
     def to_csv(self, csv_file):
