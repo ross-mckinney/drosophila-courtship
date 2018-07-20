@@ -6,6 +6,7 @@
 
 .. moduleauthor:: Ross McKinney
 """
+from copy import deepcopy
 import numpy as np
 
 from ..behavior import Behavior
@@ -35,7 +36,7 @@ def behavioral_index(arr, method='all'):
 
     Examples
     --------
-    >>> arr1 = np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1])
+    >>> arr1 = np.array([0, 0, 0, 0, 1, 1, 1, 1, 0, 1])
     >>> behavioral_index(arr1, method = 'all')  #returns 5. / 10. = 0.5
     >>> behavioral_index(arr2, method = 'condensed')  #returns 5. / 6. = 0.83
     """
@@ -104,14 +105,15 @@ def bout_boundaries(arr):
     Examples
     --------
     >>> arr = np.ndarray([0, 0, 1, 1, 1, 1, 1, 0, 0, 0])
-    >>> boundaries(arr) #returns np.ndarray([2, 6])
+    >>> boundaries(arr) #returns np.ndarray([2, 7])
     """
     arr = np.asarray(arr)
 
-    arr = np.hstack((0, arr, 0))  # pad arr with zeros to ensure below works.
+    # pad arr with zeros to ensure below works.
+    arr = np.pad(arr, 1, 'constant', constant_values=(0))
 
     start = np.flatnonzero(np.diff(arr) == 1)
-    stop = np.flatnonzero(np.diff(arr) == -1) - 1
+    stop = np.flatnonzero(np.diff(arr) == -1)
 
     return np.vstack((start, stop)).T
 
@@ -397,8 +399,8 @@ def align_transitions(xs, ys, quadrant=3):
     return centered_xs, centered_ys
 
 
-def exclude_behaviors(focal, exclude_lst):
-    """Excludes behaviors (in exclude_lst) from a focal behavior.
+def exclude_behaviors_arr(focal, exclude_lst):
+    """Excludes behaviors (as arrays) (in exclude_lst) from a focal behavior.
 
     Parameters
     ----------
@@ -420,10 +422,37 @@ def exclude_behaviors(focal, exclude_lst):
     return focal
 
 
+def exclude_behaviors(focal, exclude_lst):
+    """Excludes behaviors (as Behaviors) (in exclude_lst) from a focal behavior.
+    
+    Parameters
+    ----------
+    focal : Behavior
+
+    exclude_lst : list of Behavior
+
+    Returns
+    -------
+    Behavior : 
+        Focal behavior with behaviors in exclude_lst removed.
+    """
+    focal_name = focal.name
+    new_behavior_name = '{} -- excluding: '.format(focal_name)
+    focal = focal.as_array()
+    for i, b in enumerate(exclude_lst):
+        focal[np.where(b.as_array())] = 0
+        if i < len(exclude_lst) - 1:
+            append_to_name = '{}, '.format(b.name)
+        else:
+            append_to_name = '{}.'.format(b.name)
+        new_behavior_name += append_to_name
+    return Behavior.from_array(new_behavior_name, focal)
+
+
 def exclude_behavior_from_courtship_ts(
     ts,
-    exclude_behavior='attempted-copulation',
-    courtship_behavior='courtship_gt'
+    exclude_behavior_name='attempted-copulation',
+    courtship_behavior_name='courtship_gt'
     ):
     """Excludes bouts of one behavior from another for a specified
     TrackingSummary.
@@ -432,30 +461,29 @@ def exclude_behavior_from_courtship_ts(
     ----------
     ts : TrackingSummary
 
-    exclude_behavior : string (optional, default='attempted-copulation')
-        Must be a valid key in ts.behaviors dictionary.
+    exclude_behavior_name : string (optional, default='attempted-copulation')
+        Must be a valid name in ts.male.behaviors list.
 
-    courtship_behavior : string (optional, default='courtship_gt')
-        Name of courtship behavior. Must be a valid key in ts.behaviors
-        dictionary.
+    courtship_behavior_name : string (optional, default='courtship_gt')
+        Name of courtship behavior. Must be a valid name in ts.male.behaviors
+        list.
 
     Returns
     -------
     ts : TrackingSummary
     new_behavior_name : string
-        Name of behavior. This behavior & behavioral key is now present in the
-        TrackingSummary.
+        Name of behavior. This behavior is now present in the
+        TrackingSummary.male.behaviors list.
     """
-    courtship = ts.male.get_behavior(courtship_behavior).as_array()
-    exclude = ts.male.get_behavior(exclude_behavior).as_array()
+    exclude_behavior = ts.male.get_behavior(exclude_behavior_name)
+    courtship_behavior = ts.male.get_behavior(courtship_behavior_name)
 
-    # where courtship and exclude behaviors overlap
-    courtship[np.where(exclude)] = 0
-
-    new_behavior_name = '{}-excluding-{}'.format(
-        courtship_behavior, exclude_behavior)
-    ts.behaviors[new_behavior_name] = courtship
-    return ts, new_behavior_name
+    courtship_excluding_behavior = exclude_behaviors(
+        courtship_behavior,
+        [exclude_behavior]
+    )
+    ts.male.add_behavior(courtship_excluding_behavior)
+    return ts, courtship_excluding_behavior.name
 
 
 def exclude_behavior_from_courtship_exp(
@@ -491,70 +519,67 @@ def exclude_behavior_from_courtship_exp(
 
 
 def hierarchize(behaviors):
-    """Makes sure that each subsequent behavior does not contain any behavioral
-    locations from any previous behavior.
+    """Creates a behavioral hierarchy.
 
     Parameters
     ----------
-    behaviors : list of np.ndarray
-        Each array should be binary (contain only zeros and ones). The list
-        is hierarchized such that the first item takes the most precedent, and
-        the last, the least.
+    behaviors : list of Behavior
+        The list is hierarchized such that the first item takes the most 
+        precedent, and the last, the least.
 
     Returns
     -------
-    hierarchized_behaviors : list of np.ndarray
-        Each array is binary.
+    hierarchized_behaviors : list of Behavior
     """
     h_behav = []
     for i in xrange(len(behaviors)-1, -1, -1):
         h = exclude_behaviors(behaviors[i], behaviors[:i])
+        h.name += ' (hiearchy)'
         h_behav.append(h)
     return h_behav[::-1]
 
 
 def hierarchize_ts(ts, bnames):
-    """Creates a behavioral hierarchy for each of the passed behavior names.
+    """Creates a behavioral hierarchy for each of the passed behavior names
+    in the male fly.
 
     Parameters
     ----------
     ts : TrackingSummary
+
     bnames : list of string
         These must be valid behavior.keys
 
     Returns
     -------
     ts : TrackingSummary
-        Now contains behaviors that have been heirarchized. The hierarchized
-        behaviors have bname + '_hierarchized' as their behavioral key.
+        The male now contains behaviors that have been hierarchized. Each of
+        these behaviors contains the string `(hierarchy)` at the end of its
+        name.
     """
-    for b in bnames:
-        if b not in ts.behaviors.keys():
-            raise AttributeError('{} not found in '.format(b) +
-                'TrackingSummary.behaviors dictionary.')
-
-    behaviors = [ts.behaviors[b] for b in bnames]
+    behaviors = [ts.male.get_behavior(b) for b in bnames]
     hierarchized_behaviors = hierarchize(behaviors)
     for i in xrange(len(bnames)):
-        ts.behaviors[bnames[i] + '_hierarchized'] = hierarchized_behaviors[i]
+        ts.male.add_behavior(hierarchized_behaviors[i])
     return ts
 
 
 def hierarchize_exp(exp, bnames):
     """For each trackingsummary in the experiment, hierarchize the specified
-    behaviors.
+    behaviors (in the male).
 
     Parameters
     ----------
     exp : FixedCourtshipExperiment
     bnames : list of string
+        Names of behaviors to hiearchize (in the correct order).
 
     Returns
     -------
     exp : FixedCourtshipExperiment
     hierarchized_bnames : list of string
         Keys used to find hierarchized behaviors in each TrackingSummary's
-        behaviors dictionary.
+        male.behaviors list.
     """
     for group_name, group in exp.get_groups().iteritems():
         for ind in group:
@@ -564,9 +589,9 @@ def hierarchize_exp(exp, bnames):
     return exp, hierarchized_bnames
 
 
-def get_fraction_behaving(exp, bname, courtship_key='courtship_gt'):
-    """Finds the fraction of courtship that each animal in each group was
-    engaging in a specified behavior."""
+def behavior_as_fraction_of_courtship(exp, bname, courtship_key='courtship_gt'):
+    """Finds the duration a fly was engaged in a specified behavior as a
+    fraction of courtship.."""
     fracs = {g: [] for g in exp.order}
     for group_name, group in exp.get_groups().iteritems():
         for ts in group:

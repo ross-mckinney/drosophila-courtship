@@ -17,3 +17,4 @@ import courtship.app.entry as entry
 import courtship.stats.centroid as centroid
 import courtship.stats.spatial as spatial
 import courtship.stats.transforms as transforms
+import courtship.stats.behaviors as behaviors
