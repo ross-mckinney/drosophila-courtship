@@ -215,7 +215,7 @@ class Fly(object):
     behaviors : list of Behavior
         All behaviors that the fly engaged in during tracking.
     """
-    def __init__(self):
+    def __init__(self, n_frames=None):
         """A fly is composed of three ellipses fitted to (1) the body,
         (2) the right wing, and (3) the left wing.
         """
@@ -226,20 +226,26 @@ class Fly(object):
         self.n_frames = None
         self.behaviors = []
 
+        if n_frames is not None:
+            self.init_params(n_frames)
+
     def init_params(self, size):
-        """Initilizes space for all parameters.
+        """Initializes space for all parameters.
 
         .. warning:: Any values held within an attribute will
-           be overriden. Therefore, only call this function during the
-           initilization of a Fly object.
+           be over-ridden. Therefore, only call this function during the
+           initialization of a Fly object.
 
         Parameters
         ----------
         n : int
-            Number of frames to initilize space for each of the
+            Number of frames to initialize space for each of the
             following parameters:
                 body, left_wing and right_wing.
         """
+        if type(size) != int:
+            raise AttributeError('`size` must be of type int.')
+
         self.n_frames = size
         self.timestamps = np.zeros(size)
         self.body.init_params(size)
@@ -269,6 +275,44 @@ class Fly(object):
                 return behav
 
         raise AttributeError("Behavior '{}' not found.".format(name))
+
+    def add_behavior(self, behavior):
+        """Adds a specified behavior to this Fly's behavior list.
+
+        Parameters
+        ----------
+        behavior : Behavior
+            Behavior to add.
+        """
+        if not isinstance(behavior, Behavior):
+            raise AttributeError('passed `behavior` must be of type ' +
+                'Behavior.')
+        self.behaviors.append(behavior)
+
+    def add_behavior_from_array(self, behavior_name, behavior_arr):
+        """Generates a behavior from a behavioral/classification array, and
+        adds it to this Fly's behavior list.
+
+        Parameters
+        -----------
+        behavior_name : string
+            Name of behavior to add.
+
+        behavior_arr : 1d array-like
+            Array to generate a Behavior from, and add to Fly.behaviors list.
+        """
+        behavior_arr = np.asarray(behavior_arr)
+        if behavior_arr.size != self.n_frames:
+            msg = (
+                'Please assure that `behavior_arr` '+
+                'contains the correct number of frames. ' +
+                'n_frames != behavior_arr.size ' + 
+                '({} != {})'.format(self.n_frames, behavior_arr.size)
+                )
+            raise AttributeError(msg)
+
+        behavior = Behavior.from_array(behavior_name, behavior_arr)
+        self.behaviors.append(behavior)
 
     def list_behaviors(self):
         """Gets a list of all the current Behavior names in this Fly.
