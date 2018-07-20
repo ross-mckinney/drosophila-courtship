@@ -9,7 +9,7 @@
 import numpy as np
 import pandas as pd
 
-from . import behavior
+from .behavior import Behavior
 
 
 class Point(object):
@@ -414,7 +414,7 @@ class Fly(object):
                     )
             elif col_id[0] == 'behavior':
                 behavior_name = '_'.join(col_id[1:])
-                new_behavior = behavior.Behavior.from_array(
+                new_behavior = Behavior.from_array(
                     behavior_name,
                     fly_df[colname].values)
                 fly.behaviors.append(new_behavior)
