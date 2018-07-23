@@ -14,10 +14,10 @@ import pandas as pd
 from scipy.ndimage.filters import generic_filter
 
 from errors import *
-from statistics import social
-from statistics import wing
-from statistics import centroid
-from statistics import _signal as signal
+from courtship.stats import spatial
+from courtship.stats import wing
+from courtship.stats import centroid
+from courtship.stats import _signal as signal
 
 
 class FeatureMatrix(object):
@@ -294,10 +294,10 @@ class WingFeatures(FeatureMatrix):
                 wing.individual_wing_angles(fly)
             self.wing_distances = wing.wing_distances(fly) / self.pixels_per_mm
             self.full_wing_angle = wing.full_wing_angle(fly)
-            self.left_wing_area = fly.left_wing.area / self.pixels_per_mm
-            self.right_wing_area = fly.right_wing.area / self.pixels_per_mm
-        except (AttributeError, TypeError, NameError):
-            return
+            self.left_wing_area = fly.left_wing.area() / self.pixels_per_mm
+            self.right_wing_area = fly.right_wing.area() / self.pixels_per_mm
+        except (AttributeError, TypeError, NameError) as e:
+            raise e
 
 
 class SocialFeatures(FeatureMatrix):
@@ -340,17 +340,17 @@ class SocialFeatures(FeatureMatrix):
         FeatureMatrix.__init__(self, pixels_per_mm)
 
         try:
-            self.c2c = social.nearest_neighbor_centroid(
+            self.c2c = spatial.nearest_neighbor_centroid(
                 male, female, normalized=False) / self.pixels_per_mm
-            self.n2e, self.t2e = social.nose_and_tail_to_ellipse(
+            self.n2e, self.t2e = spatial.nose_and_tail_to_ellipse(
                 male, female, normalized=False)
             self.n2e /= self.pixels_per_mm
             self.t2e /= self.pixels_per_mm
-            self.rel_ori = social.relative_orientation(male, female)
-            self.abs_ori = social.abs_relative_orientation(male, female)
+            self.rel_ori = spatial.relative_orientation(male, female)
+            self.abs_ori = spatial.abs_relative_orientation(male, female)
             self.nte_diff = self.n2e - self.t2e
-        except (AttributeError, TypeError, NameError):
-            return
+        except (AttributeError, TypeError, NameError) as e:
+            raise e
 
 
 class GeneralFeatures(FeatureMatrix):
@@ -410,12 +410,12 @@ class GeneralFeatures(FeatureMatrix):
                 fly, normalized=False) / self.pixels_per_mm
             self.maj_ax_len = fly.body.major_axis_length / self.pixels_per_mm
             self.min_ax_len = fly.body.minor_axis_length / self.pixels_per_mm
-            self.area = fly.body.area / self.pixels_per_mm
+            self.area = fly.body.area() / self.pixels_per_mm
             self.orientation = fly.body.orientation
             self.c2edge = centroid.centroid_to_arena_edge(
                 fly, arena_center, arena_radius) / self.pixels_per_mm
-        except (AttributeError, TypeError, NameError):
-            return
+        except (AttributeError, TypeError, NameError) as e:
+            raise e
 
 
 class ScissoringFeatureMatrix(GeneralFeatures, WingFeatures, SocialFeatures):
