@@ -59,5 +59,18 @@ if __name__ == '__main__':
                 'courtship.ml',
                 'courtship.stats',
                 'courtship.app',
-            ]
+                'courtship.app.dialogs',
+                'courtship.app.widgets',
+                'courtship.app.icons'
+            ],
+        entry_points={
+            'console_scripts': [
+                'tracking-app=courtship.app.entry:main',
+            ],
+        },
+        package_data = {
+            'courtship.app': [
+                'icons/*.png'
+            ],
+        }
     )
