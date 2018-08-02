@@ -276,6 +276,21 @@ class Fly(object):
 
         raise AttributeError("Behavior '{}' not found.".format(name))
 
+    def get_all_behaviors_as_dict(self):
+        """Gets all of the behaviors contained within this fly and returns
+        them as a dictionary of binary arrays.
+
+        Returns
+        -------
+        behaviors : dict
+            Each key is the behavior name, each value its associated binary
+            array.
+        """
+        behaviors = {}
+        for behavior in self.behaviors:
+            behaviors[behavior.name] = behavior.as_array()
+        return behaviors
+
     def add_behavior(self, behavior):
         """Adds a specified behavior to this Fly's behavior list.
 

@@ -403,6 +403,8 @@ class MainWindow(QMainWindow):
 
         self.classification_toolbar.setEnabled(True)
         self.classification_widget.set_tracking_summary(tracking_summary)
+        self.classification_widget.statistics = \
+            tracking_summary.male.get_all_behaviors_as_dict()
         self.classification_widget.update_combobox()
         self.classification_widget.update_stat_label(0)
         self.classification_toolbar.show()
