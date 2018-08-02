@@ -65,7 +65,7 @@ if __name__ == '__main__':
             ],
         entry_points={
             'console_scripts': [
-                'tracking-app=courtship.app.entry:main',
+                'courtship-app=courtship.app.entry:main',
             ],
         },
         package_data = {
