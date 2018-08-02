@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import courtship.fly as fly
 import courtship.behavior as behavior
+import courtship.experiment as experiment
 import courtship.ts as ts
 
 import courtship.app.arena as trk_arena
