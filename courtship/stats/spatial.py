@@ -566,7 +566,7 @@ def normalized_nearest_neighbor_centroid(fly1, fly2):
     """
 
     distances = nearest_neighbor_centroid(fly1, fly2, normalized=False)
-    mean_area = np.mean(fly1.body.area)
+    mean_area = np.mean(fly1.body.area())
 
     return distances.astype(np.float) / mean_area
 
