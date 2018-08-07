@@ -11,6 +11,7 @@ import pandas as pd
 import pycircstat.descriptive as pysum
 import pycircstat.tests as pytest
 
+from courtship.behavior import Behavior
 from courtship.stats import (
     behaviors,
     centroid,
@@ -27,9 +28,16 @@ class FixedCourtshipTrackingExperiment(object):
     Parameters
     ----------
     """
-    def __init__(self, order=None, fps=24., duration_seconds=600., **kwargs):
-        self.fps = fps
-        self.duration_seconds = duration_seconds
+    def __init__(self,
+        order=None,
+        video_fps=24.,
+        video_duration_seconds=600.,
+        video_duration_frames=14399,
+        **kwargs):
+        self.video_fps = video_fps
+        self.video_duration_seconds = video_duration_seconds
+        self.video_duration_frames = video_duration_frames
+
         self.group_names = []
         if order is None:
             self.order = sorted(kwargs.keys())
@@ -44,8 +52,8 @@ class FixedCourtshipTrackingExperiment(object):
             self.group_names.append(group_name)
 
     @classmethod
-    def load_from_fcts(cls, data_dirs, groups=None, order=None, fps=24.,
-        duration_seconds=600.):
+    def load_from_fcts(cls, data_dirs, groups=None, order=None, video_fps=24.,
+        video_duration_seconds=600., video_duration_frames=14400):
         """Loads a FixedCourtshipTrackingExperiment from .fcts files.
 
         Parameters
@@ -63,11 +71,14 @@ class FixedCourtshipTrackingExperiment(object):
             Ordered list of string. Each item should be a valid key name (group
             name) in groups dictionary.
 
-        fps : float, optional (default=24.)
+        video_fps : float, optional (default=24.)
             Video frame-rate (frames-per-second).
 
-        duration_seconds : float, optional (default=600.)
-            Total duration of video recordings.
+        video_duration_seconds : float, optional (default=600.)
+            Total duration of video recordings (in seconds).
+
+        video_duration_frames : int, optional (default=14400)
+            Total number of frames expected in each video recording.
 
         Returns
         -------
@@ -129,8 +140,9 @@ class FixedCourtshipTrackingExperiment(object):
 
         return cls(
             order=order,
-            fps=fps,
-            duration_seconds=duration_seconds,
+            video_fps=video_fps,
+            video_duration_seconds=video_duration_seconds,
+            video_duration_frames=video_duration_frames,
             **experimental_groups
         )
 
@@ -464,7 +476,7 @@ class FixedCourtshipTrackingExperiment(object):
                 if np.sum(b_ixs) == 0:
                     continue
                 theta, _ = spatial.relative_position2(
-                    tracking_summary.male, 
+                    tracking_summary.male,
                     tracking_summary.female
                     )
 
@@ -518,6 +530,7 @@ class FixedCourtshipTrackingExperiment(object):
 
             distances[group_name] = np.asarray(rs)
         return distances
+
     def add_behavior_from_csv(self,
         behavior_name,
         csv_filename,
