@@ -518,3 +518,170 @@ class FixedCourtshipTrackingExperiment(object):
 
             distances[group_name] = np.asarray(rs)
         return distances
+    def add_behavior_from_csv(self,
+        behavior_name,
+        csv_filename,
+        video_header='video',
+        group_header='group',
+        start_ixs_header='start',
+        stop_ixs_header='stop',
+        behaving_header='behaving'
+        ):
+        """Adds a behavior -- contained in a .csv file -- to each male fly
+        within this Experiment.
+
+        The .csv file should have at least 5 columns with the following headers:
+            1. `video_header`
+            2. `group_header`
+            3. `start_ixs_header`
+            4. `stop_ixs_header`
+            5. `behaving_header`
+
+        Parameters
+        ----------
+        behavior_name : string
+            Name of behavior to add to each individual.
+
+        csv_filename : string
+            Path to .csv file containing behavioral info.
+
+        video_header : string
+            Name of column header containing video file path info. This is
+            the basename of the video from which behavioral data was taken.
+
+        group_header : string
+            Name of column header containing group info.
+
+        start_ixs_header : string
+            Name of column header containing starting indices of behavioral
+            bouts.
+
+        stop_ixs_header : string
+            Name of column header containing stopping indices of behavioral
+            bouts.
+
+        behaving_header : string
+            Name of column header containing behavioral state of fly during
+            start_ixs and stop_ixs. This should either be 0 or 1 for each
+            behavioral bout.
+        """
+        behavioral_df = pd.read_csv(csv_filename)
+        unique_videos = behavioral_df[video_header].unique()
+
+        for video in unique_videos:
+            video_df = behavioral_df[behavioral_df[video_header] == video]
+            video_basename = os.path.basename(video)
+
+            group_name = video_df[group_header].iloc[0]
+            start_ixs = video_df[start_ixs_header].values
+            stop_ixs = video_df[stop_ixs_header].values
+            behaving = video_df[behaving_header].values
+
+            classification_arr = np.zeros(self.video_duration_frames)
+            for i in xrange(start_ixs.size):
+                start = start_ixs[i]
+                stop = stop_ixs[i]
+                classification_arr[start:stop] = behaving[i]
+
+            group = getattr(self, group_name)
+            for tracking_summary in group:
+                if os.path.basename(tracking_summary.video.filename) == \
+                    video_basename:
+                    tracking_summary.male.add_behavior_from_array(
+                        behavior_name,
+                        classification_arr
+                    )
+                    break
+
+    def plot_behavioral_distances_cartesian(
+        self,
+        behavior_name,
+        nbins=50,
+        mean_colors=None,
+        mean_linewidth=2,
+        fillcolors=None,
+        **kwargs
+        ):
+        """Generates a plot of mean male-female distances for a
+        specified behavior from -np.pi to np.pi.
+
+        .. note: To generate a plot in polar coordinates, use
+        plot_behavioral_distances_polar().
+
+        Parameters
+        ----------
+        behavior_name : string
+            Name of behavior to plot. This should be a valid key
+            in the TrackingSummary.behaviors attribute.
+
+        nbins : int (default=50)
+            Number of bins to use to calculate distances across.
+
+        mean_colors : list of any valid matplotlib color or None (default=None)
+            Color of mean line for each group. If None, random colors will be
+            chosen.
+
+        mean_linewidth : int (default=2)
+            Linewidth of mean line.
+
+        fillcolors : list of any valid matplotlib color or None (default=None)
+            Color call to plt.fill_between(). If None, the fillcolor will be
+            the same as the mean_color set to 50\% alpha.
+
+        **kwargs :
+            Keyword arguments to be passed to matplotlib.axes.plot().
+            These arguments will affect the mean line.
+
+        Returns
+        -------
+        fig, ax : matplotlib figure & axes handle.
+        """
+        if mean_colors is None:
+            mean_colors = [
+                np.random.random(3) for i in xrange(len(self.order))
+            ]
+        else:
+            if len(mean_colors) != len(self.order):
+                raise AttributeError(
+                    'color list must contain same number of items as' +
+                    'groups.'
+                )
+
+        if fillcolors is None:
+            fillcolors = mean_colors
+            alpha = 0.5
+        else:
+            if len(fillcolors) != len(mean_colors):
+                raise AttributeError(
+                    'fillcolors must be same length as mean_colors.'
+                )
+            alpha = 1
+
+        rs = self.get_behavioral_distances(behavior_name, nbins=nbins)
+        thetas = np.linspace(-np.pi, np.pi, nbins)
+
+        fig, ax = plt.subplots()
+
+        for i, group in enumerate(self.order):
+            mean_rs = np.nanmean(rs[group], axis=0)
+            sem_rs = np.nanstd(rs[group], axis=0) / np.sqrt(rs[group].shape[0])
+
+            ax.plot(
+                thetas,
+                mean_rs,
+                color=mean_colors[i],
+                linewidth=mean_linewidth,
+                zorder=1,
+                **kwargs
+            )
+
+            ax.fill_between(
+                thetas, mean_rs - sem_rs,
+                mean_rs + sem_rs,
+                color=fillcolors[i],
+                alpha=alpha,
+                zorder=0
+            )
+
+        return fig, ax
+
