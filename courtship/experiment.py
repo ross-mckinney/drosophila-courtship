@@ -463,7 +463,7 @@ class FixedCourtshipTrackingExperiment(object):
             behavior for each group and courting pair held within this
             experiment.
         """
-        if metric not in ['centroid-to-centroid', 'head-to-ellipse', 
+        if metric not in ['centroid-to-centroid', 'head-to-ellipse',
             'rear-to-ellipse']:
             message = (
                         '{} '.format(metric) +
@@ -676,4 +676,42 @@ class FixedCourtshipTrackingExperiment(object):
             )
 
         return fig, ax
+
+    def hierarchize_behaviors(self, behavior_names):
+        """Create a behavioral hierarchy for each male fly in this Experiment.
+
+        Behaviors in the hierarchy are organized such that behaviors with more
+        precedence will never overlap behaviors with less precedence. And if
+        a behavior with less precedence has overlapping bouts with a behavior
+        of higher precedence, the bouts in the lesser behavior are simply
+        removed.
+
+        Parameters
+        ----------
+        behavior_names : list of string
+            List of behaviors. Behaviors appearring earlier in the list take
+            precedence over behaviors appearing later in the list. Thus
+            b0 > b1 > b2 > etc.
+
+        Returns
+        -------
+        hierarchized_behavior_names : list of string
+            Each item is a behavioral key that has been added to each male in
+            this Experiment. The list is ordered such similarly to
+            `behavior_names`, with items appearing earlier in this list taking
+            greater precedence than those appearing later.
+        """
+        for group_name, tracking_summary in self.itergroups():
+            new_ts = behaviors.hierarchize_ts(
+                tracking_summary, behavior_names
+                )
+
+        hierarchy_names = [
+            name for name in new_ts.male.list_behaviors() \
+            if '(hierarchy)' in name
+            ]
+        order = np.argsort([len(n) for n in hierarchy_names])
+        return [hierarchy_names[i] for i in order]
+
+
 
