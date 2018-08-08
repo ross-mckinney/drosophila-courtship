@@ -463,6 +463,18 @@ class FixedCourtshipTrackingExperiment(object):
             behavior for each group and courting pair held within this
             experiment.
         """
+        if metric not in ['centroid-to-centroid', 'head-to-ellipse', 
+            'rear-to-ellipse']:
+            message = (
+                        '{} '.format(metric) +
+                        'is not a valid option for distance parameter.\n' +
+                        'Valid options are as follows:\n' +
+                        '\t1. \'centroid-to-centroid\' (default)\n' +
+                        '\t2. \'head-to-ellipse\'\n' +
+                        '\t3. \'rear-to-ellipse\''
+                        )
+            raise AttributeError(message)
+
         distances = {}
         for group_name in self.group_names:
             rs = []
@@ -475,58 +487,25 @@ class FixedCourtshipTrackingExperiment(object):
 
                 if np.sum(b_ixs) == 0:
                     continue
-                theta, _ = spatial.relative_position2(
-                    tracking_summary.male,
-                    tracking_summary.female
-                    )
 
                 if metric == 'centroid-to-centroid':
-                    r = spatial.nearest_neighbor_centroid(
-                            tracking_summary.male,
-                            tracking_summary.female,
-                            normalized=False
-                        ) / tracking_summary.video.pixels_per_mm
-                elif metric == 'head-to-ellipse':
-                    r, _ = spatial.nose_and_tail_to_ellipse(
-                        tracking_summary.male,
-                        tracking_summary.female,
-                        normalized=False
-                    )
-                    r = r / tracking_summary.video.pixels_per_mm
-                elif metric == 'rear-to-ellipse':
-                    _, r = spatial.nose_and_tail_to_ellipse(
-                        tracking_summary.male,
-                        tracking_summary.female,
-                        normalized=False
-                    )
-                    r = r / tracking_summary.video.pixels_per_mm
-                else:
-                    message = (
-                        '{} '.format(metric) +
-                        'is not a valid option for distance parameter.\n' +
-                        'Valid options are as follows:\n' +
-                        '\t1. \'centroid-to-centroid\' (default)\n' +
-                        '\t2. \'head-to-ellipse\'\n' +
-                        '\t3. \'rear-to-ellipse\''
+                    rs.append(
+                        spatial.binned_centroid_to_centroid(
+                            tracking_summary, behavior_name=behavior_name
+                            )
                         )
-                    raise AttributeError(message)
-
-                theta = theta[np.flatnonzero(b_ixs)]
-                r = r[np.flatnonzero(b_ixs)]
-
-                if nbins is None:
-                    rs.append(np.nanmean(r))
-                    continue
-
-                edges = np.linspace(-np.pi, np.pi, nbins)
-                r_bins = [[] for i in xrange(nbins)]
-
-                for i in xrange(theta.size):
-                    rix = np.searchsorted(edges, theta[i])
-                    r_bins[rix].append(r[i])
-
-                r_bins = [np.nanmean(rb) for rb in r_bins]
-                rs.append(r_bins)
+                elif metric == 'head-to-ellipse':
+                    rs.append(
+                        spatial.binned_head_to_ellipse(
+                            tracking_summary, behavior_name=behavior_name
+                            )
+                        )
+                else:
+                    rs.append(
+                        spatial.binned_rear_to_ellipse(
+                            tracking_summary, behavior_name=behavior_name
+                            )
+                        )
 
             distances[group_name] = np.asarray(rs)
         return distances
