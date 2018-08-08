@@ -193,7 +193,7 @@ def _bin_circular(
     if np.sum(b_ixs) == 0:
         warnings.warn(
             'No behavioral indices found for video:' +
-            '{} '.format(os.path.basename(tracking_summary.video_file)) +
+            '{} '.format(os.path.basename(tracking_summary.video.filename)) +
             'NaNs have been returned.'
             )
         return np.repeat(np.nan, bins)
