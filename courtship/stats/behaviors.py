@@ -512,8 +512,7 @@ def exclude_behavior_from_courtship_exp(
         Name of behavior. This behavior & behavioral key is now present in the
         TrackingSummary.
     """
-    for group_name, group in exp.get_groups().iteritems():
-        for ind in group:
+    for group_name, ind in exp.itergroups():
             _, excluded_bname = exclude_behavior_from_courtship_ts(ind)
     return exp, excluded_bname
 
@@ -534,7 +533,7 @@ def hierarchize(behaviors):
     h_behav = []
     for i in xrange(len(behaviors)-1, -1, -1):
         h = exclude_behaviors(behaviors[i], behaviors[:i])
-        h.name += ' (hiearchy)'
+        h.name += ' (hierarchy)'
         h_behav.append(h)
     return h_behav[::-1]
 
@@ -581,9 +580,8 @@ def hierarchize_exp(exp, bnames):
         Keys used to find hierarchized behaviors in each TrackingSummary's
         male.behaviors list.
     """
-    for group_name, group in exp.get_groups().iteritems():
-        for ind in group:
-            _ = hierarchize_ts(ind, bnames)
+    for group_name, ind in exp.itergroups():
+        _ = hierarchize_ts(ind, bnames)
 
     hierarchized_bnames = [b + '_hierarchized' for b in bnames]
     return exp, hierarchized_bnames
