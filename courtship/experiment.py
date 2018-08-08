@@ -32,7 +32,7 @@ class FixedCourtshipTrackingExperiment(object):
         order=None,
         video_fps=24.,
         video_duration_seconds=600.,
-        video_duration_frames=14399,
+        video_duration_frames=14400,
         **kwargs):
         self.video_fps = video_fps
         self.video_duration_seconds = video_duration_seconds
