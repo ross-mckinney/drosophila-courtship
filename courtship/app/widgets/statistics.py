@@ -199,7 +199,7 @@ class SelectableWindow(StatisticWindowWidget):
         """
         self.tracking_summary = tracking_summary
         if len(self.statistics) > 0:
-            self.n_frames = self.tracking_summary.video.n_frames
+            self.n_frames = self.tracking_summary.video.duration_frames
         else:
             self.n_frames = 0
 
