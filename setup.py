@@ -57,6 +57,7 @@ if __name__ == '__main__':
         packages=[
                 'courtship',
                 'courtship.ml',
+                'courtship.plots',
                 'courtship.stats',
                 'courtship.app',
                 'courtship.app.dialogs',
