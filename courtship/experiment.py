@@ -563,27 +563,30 @@ class FixedCourtshipTrackingExperiment(object):
         for video in unique_videos:
             video_df = behavioral_df[behavioral_df[video_header] == video]
             video_basename = os.path.basename(video)
-
             group_name = video_df[group_header].iloc[0]
-            start_ixs = video_df[start_ixs_header].values
-            stop_ixs = video_df[stop_ixs_header].values
-            behaving = video_df[behaving_header].values
-
-            classification_arr = np.zeros(self.video_duration_frames)
-            for i in xrange(start_ixs.size):
-                start = start_ixs[i]
-                stop = stop_ixs[i]
-                classification_arr[start:stop] = behaving[i]
 
             group = getattr(self, group_name)
             for tracking_summary in group:
-                if os.path.basename(tracking_summary.video.filename) == \
+                if os.path.basename(tracking_summary.video.filename) != \
                     video_basename:
-                    tracking_summary.male.add_behavior_from_array(
-                        behavior_name,
-                        classification_arr
-                    )
-                    break
+                    continue
+
+                start_ixs = video_df[start_ixs_header].values
+                stop_ixs = video_df[stop_ixs_header].values
+                behaving = video_df[behaving_header].values
+                n_frames = tracking_summary.video.duration_frames
+
+                classification_arr = np.zeros(n_frames)
+                for i in xrange(start_ixs.size):
+                    start = start_ixs[i]
+                    stop = stop_ixs[i]
+                    classification_arr[start:stop] = behaving[i]
+
+                tracking_summary.male.add_behavior_from_array(
+                    behavior_name,
+                    classification_arr
+                )
+                break
 
     def plot_behavioral_distances_cartesian(
         self,
