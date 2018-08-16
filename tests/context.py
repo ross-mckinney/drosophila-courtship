@@ -22,3 +22,6 @@ import courtship.stats.behaviors as behaviors
 
 import courtship.ml.features as features
 import courtship.ml.classifiers as classifiers
+
+import courtship.plots as plots
+from courtship.plots._data import PlotData
