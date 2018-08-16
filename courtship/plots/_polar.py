@@ -10,6 +10,8 @@ from courtship.stats import (
     spatial
 )
 
+from ._data import PlotData
+
 def _binned_dot(
     ax,
     data,
@@ -168,7 +170,7 @@ def _binned_dot(
     ax.set_rmax(r_max)
 
 
-def binned_dot(
+def polar_dot_binned(
     data,
     order=None,
     shape=None,
@@ -347,12 +349,13 @@ def binned_dot(
     return fig, ax
 
 
-def dot(
+def polar_dot_jittered(
     exp,
     behavior_name,
     ax=None,
-    colors=None,                  #FIXME!
+    colors=None,
     plot_points=True,
+    point_jitter=0.05,
     plot_medians=True,
     error_push_out=0.2,
     error_linewidth=2,
@@ -387,6 +390,9 @@ def dot(
     plot_points : bool (optional, default=True)
         Whether or not to show individual data points on plot.
 
+    point_jitter : float (optional, default=0.05)
+        How much jitter to add to points (jitter is along the r-axis).
+
     plot_medians : bool (optional, default=True)
         Whether or not to plot a point at the median value of the
         data for each group.
@@ -417,13 +423,13 @@ def dot(
         ncols=2,
         subplot_kw=dict(polar=True)
     )
-    >>> arrow_plot(
+    >>> polar_dot_jittered(
             exp,
             cleaned_scissoring,
             ax=ax[0],
             plot_points=False
         )
-    >>> arrow_plot(
+    >>> polar_dot_jittered(
             exp,
             cleaned_scissoring,
             ax=ax[1],
@@ -431,24 +437,18 @@ def dot(
         )
     """
 
-    return_fig = False
     if ax is None:
         fig, ax = plt.subplots(subplot_kw=dict(polar=True))
-        return_fig = True
-
-    thetas = exp.get_ang_location_summary(behavior_name)
-    rvls = {}
-    medians = {}
-
-    if colors is None:
-        colors = [
-            np.random.random_sample(3) for i in xrange(len(exp.order))
-        ]
     else:
-        if len(colors) != len(exp.order):
-            raise AttributeError(
-                'len(colors) must be equal to number of groups in Experiment.'
-            )
+        fig = plt.gcf()
+
+    data = PlotData(
+        data=exp.get_ang_location_summary(behavior_name),
+        order=exp.order,
+        colors=colors
+    )
+
+    medians = {}
 
     if plot_points:
         median_position_spread = 0.2
@@ -466,21 +466,20 @@ def dot(
     )
 
     for i, group in enumerate(exp.order):
-        t = np.asarray(thetas[group])
+        thetas = data.data[group]
 
-        mean_theta = pysum.mean(t)
-        resultant_vector_length = pysum.resultant_vector_length(t)
+        mean_theta = pysum.mean(thetas)
+        resultant_vector_length = pysum.resultant_vector_length(thetas)
         try:
             ci = pysum.mean_ci_limits(
-                    t,
+                    thetas,
                     ci=0.95
                 )
         except UserWarning as e:
             print e
 
-        rvls[group] = resultant_vector_length
         medians[group] = pysum.median(
-                            t,
+                            thetas,
                             ci=0.95,
                             bootstrap_iter=500
                         )
@@ -492,16 +491,16 @@ def dot(
             arrowprops=dict(
                         arrowstyle='-|>',
                         linewidth=arrow_linewidth,
-                        color=colors[i]
+                        color=data.colors[i]
                         )
         )
 
         if plot_points:
             ax.scatter(
-                t,
-                (np.random.rand(t.size) * 0.05 +
-                 np.ones(t.size) * (median_rs[i] - 0.05)),
-                color=colors[i],
+                thetas,
+                (np.random.rand(thetas.size) * point_jitter +
+                 np.ones(thetas.size) * (median_rs[i] - point_jitter)),
+                color=data.colors[i],
                 **kwargs
             )
 
@@ -510,7 +509,7 @@ def dot(
             ax.plot(
                 medians[group][0],
                 median_rs[i] + error_push_out,
-                color=colors[i],
+                color=data.colors[i],
                 marker='.',
                 alpha=0.5,
                 visible=median_visible
@@ -518,7 +517,7 @@ def dot(
             ax.plot(
                 [0, medians[group][0]],
                 [0, median_rs[i] + error_push_out],
-                color=colors[i],
+                color=data.colors[i],
                 alpha=0.5,
                 linestyle=error_linestyle,
                 linewidth=error_linewidth
@@ -535,43 +534,16 @@ def dot(
             ax.plot(
                 thetas,
                 rs + error_push_out,
-                color=colors[i],
+                color=data.colors[i],
                 alpha=0.5,
                 linestyle=error_linestyle,
                 linewidth=error_linewidth)
 
-    ax.plot([
-        np.pi, 0],
-        [1, 1],
-        color='lightgray',
-        linestyle='-'
-    )
-    ax.plot(
-        [np.pi/2, 3*np.pi/2],
-        [1, 1],
-        color='lightgray',
-        linestyle='-'
-    )
-
-    ax.plot(
-        np.linspace(0, 2*np.pi, 360),
-        np.ones(360),
-        color='lightgray',
-        linestyle='-'
-    )
-
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    ax.set_ylim(0, ymax)
-    ax.axis('off')
-
-    if return_fig:
-        return fig, ax
-    return ax
+    ax = format_polar_axes(ax)
+    return fig, ax
 
 
-def _format_axes(
+def format_polar_axes(
     ax,
     color='lightgray',
     linestyle='-',
@@ -637,12 +609,13 @@ def _format_axes(
     return ax
 
 
-def arrow(
+def polar_arrow(
     data,
     order=None,
     colors=None,
     linewidth=2,
-    ax=None
+    ax=None,
+    format_axes=False
     ):
     """Plots an arrow representing Rayleigh R-values on a polar axes.
     
@@ -705,7 +678,10 @@ def arrow(
                         )
             )
 
-    return fig, _format_axes(ax)
+    if format_axes:
+        ax = format_polar_axes(ax)
+
+    return fig, ax
 
 
 if __name__ == '__main__':
