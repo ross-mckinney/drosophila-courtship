@@ -1,7 +1,8 @@
 # __init__.py
 
-from _circular import (
-    arrow,
-    binned_dot,
-    dot
+from _polar import (
+    polar_arrow,
+    polar_dot_binned,
+    polar_dot_jittered,
+    format_polar_axes
 )
