@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-class Data(object):
+class PlotData(object):
     """Class to organize data for plotting.
 
     Parameters
@@ -66,7 +66,7 @@ class Data(object):
                 )
             setattr(self, attr_name, attr_vals)
 
-    def iter_xy_jitter(self, jitter=0):
+    def iter_xy_jittered(self, jitter=0):
         """Each distribution (y-values) is yielded with a corresponding pair of
         jittered x-values. This is useful for creating stripcharts.
 
@@ -90,7 +90,7 @@ class Data(object):
             at=[1, 2],
             colors=['red', 'green']
             )
-        >>> for x, y in data.iter_xy_jitter(0):
+        >>> for x, y in data.iter_xy_jitter(jitter=0):
                 print x, y
 
             [1, 1, 1, 1], [1, 1.5, 1.25, 1.25]
@@ -105,14 +105,14 @@ class Data(object):
 
             yield x, y
 
-    def iter_xy_bin(self, nbins, spread=0.2):
+    def iter_xy_binned(self, num_bins, spread=0.2):
         """Each distribution (y-values) is yielded with a corresponding pair
         of x-values, such that when plotted as on a stripchart, points will
         appear to be binned and stacked on top of each other.
 
         Parameters
         ----------
-        nbins : int
+        num_bins : int
             Number of bins to split data into.
 
         spread : float (optional, default=0.2)
@@ -125,36 +125,28 @@ class Data(object):
         x, y : np.array, np.array
         """
         for i, group_name in enumerate(self.order):
-            for group_vals in self.data.itervalues():
-                min_val = np.min(group_vals)
-                max_val = np.max(group_vals)
+            group_vals = self.data[group_name]
+            min_val = np.min(group_vals)
+            max_val = np.max(group_vals)
 
-                bins = np.linspace(min_val, max_val, nbins)
+            bins = np.linspace(min_val, max_val, num_bins)
 
-                hist_count, edges = np.histogram(group_vals, bins)
-                total_count = np.sum(hist_count)
+            hist_count, edges = np.histogram(group_vals, bins)
+            total_count = np.sum(hist_count)
 
-                mids = np.diff(edges) / 2 + edges[:-1]
+            mids = np.diff(edges) / 2 + edges[:-1]
 
-                x, y = [], []
-                for i, mid in enumerate(mids):
-                    count = hist_count[i]
-                    if count == 0:
-                        continue
+            x, y = [], []
+            for j, mid in enumerate(mids):
+                count = hist_count[j]
+                if count == 0:
+                    continue
 
-                    y += np.repeat(mid, count).tolist()
-                    x += np.linspace(
-                        self.at[i] - spread*count/total_count,
-                        self.at[i] + spread*count/total_count,
-                        count
-                    ).tolist()
+                y += np.repeat(mid, count).tolist()
+                x += np.linspace(
+                    self.at[i] - spread*count/total_count,
+                    self.at[i] + spread*count/total_count,
+                    count
+                ).tolist()
 
-                yield x, y
-
-    def get_ordered_values(self):
-        """Returns a list of all values in PFrame as a list of lists."""
-
-        vals = []
-        for k in self.order:
-            vals.append(self.data[k])
-        return vals
+            yield x, y
