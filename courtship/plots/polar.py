@@ -16,10 +16,31 @@ def polar_dot(
     ax=None,
     **kwargs
     ):
-    """
+    """Plots points onto the outside of a polar Axes.
+
     Parameters
     ----------
-    **kwargs : keyword arguments passed to matplotlib.pyplot.scatter()
+    thetas : 1D array-like
+        Angular values to plot.
+
+    at : int or float (optional, default=1)
+        Position (r-value, along radial axis) to plot points.
+
+    color : valid matplotlib color (optional, default='C0')
+        Color of dots.
+
+    jitter : float (optional, default=0)
+        How much jitter should be applid to r-value for plotting dots?
+
+    ax : matplotlib Axes handle (optional, default=None)
+        Axes to plot dots. If `ax` is passed, make sure that it is already
+        formatted in polar coordinates!
+
+    **kwargs : keyword arguments to be passed to ax.scatter()
+
+    Returns
+    -------
+    fig, ax : matplotlib Figure & Axes handle.
     """
     thetas = np.asarray(thetas)
 
@@ -58,10 +79,10 @@ def polar_arrow(
 
     direction_function : function (optional, default=pycircstat.mean)
         Which direction should the arrow be pointing. Other possibilities 
-        include pycircstat.median.
+        include pycircstat.median. In any case, this function should return
+        a singular, numeric value.
 
-    **arrow_args : keyword arguments
-        Will be passed to matplotlib.Axes.annotate(arrowprops=arrow_args).
+    **arrow_args : arrowprop dictionary to be passed to ax.annotate()
         These can include: width, headwidth, frac, shrink, etc. (see: 
         https://matplotlib.org/users/annotations_intro.html for more info on
         what arguments can be passed here).
@@ -106,6 +127,31 @@ def polar_median_error(
 
     Parameters
     ----------
+    thetas : 1D array-like
+        Angular values to plot error bars for.
+
+    at : int or float (optional, default=1)
+        Position (r-value, along radial axis) to plot error bars.
+
+    color : valid matplotlib color (optional, default='C0')
+        Color of error bars.
+
+    ax : matplotlib Axes handle (optional, default=None)
+        Where to plot error bars. If None, a new Axes handle will be generated.
+        If `ax` is passed, make sure it is already in polar coordinates!
+
+    median_args : dict (optional, default={'ci':0.95, 'bootstrap_iter':1000})
+        Arguments to be passed to pycircstat.median. This function will be used
+        to calculate the median and confidence intervals around the median. See:
+        https://github.com/circstat/pycircstat/blob/master/pycircstat/descriptive.py
+        for possible arguments to add here.
+
+    **kwargs : keword arguments to be passed to ax.plot()
+        Arguments to further refine look of error bars (which are just lines).
+    
+    Returns
+    -------
+    fig, ax : matplotlib Figure & Axes handle.
     """
     thetas = np.asarray(thetas)
 
@@ -137,7 +183,34 @@ def polar_dot_binned(
     ax=None,
     **kwargs
     ):
-    """
+    """Plots histogrammed/binned points onto the outside of a polar Axes.
+
+    Parameters
+    ----------
+    thetas : 1D array-like
+        Angular values to plot.
+
+    at : int or float (optional, default=1)
+        Position (r-value, along radial axis) to plot points.
+
+    color : valid matplotlib color (optional, default='C0')
+        Color of dots.
+
+    spread : float (optional, default=2.)
+        How spread out should the dots within the histogram bin be?
+
+    num_bins : int (optional, default=50)
+        How many bins should be used for generating the histogram?
+
+    ax : matplotlib Axes handle (optional, default=None)
+        Axes to plot dots. If `ax` is passed, make sure that it is already
+        formatted in polar coordinates!
+
+    **kwargs : keyword arguments to be passed to ax.scatter()
+
+    Returns
+    -------
+    fig, ax : matplotlib Figure & Axes handle.
     """
     thetas = np.asarray(thetas)
 
