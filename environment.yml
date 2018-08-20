@@ -13,6 +13,8 @@ dependencies:
     - scipy
     - sphinx
     - sphinxcontrib
+    - xlsxwriter
+    - xlrd
     - pip:
         - motmot.FlyMovieFormat
         - pycircstat
