@@ -164,7 +164,11 @@ class FixedCourtshipTrackingSummary(TrackingSummary):
             parsed_name = colname.split('.')
             if parsed_name[0] == 'arena':
                 if parsed_name[-1] == 'vertices':
-                    setattr(fcts.arena, parsed_name[-1], meta_df[colname].values)
+                    setattr(
+                        fcts.arena, 
+                        parsed_name[-1], 
+                        meta_df[colname].values.tolist()
+                        )
                 else:
                     setattr(fcts.arena, parsed_name[-1], meta_df[colname][0])
             elif parsed_name[0] == 'video':
