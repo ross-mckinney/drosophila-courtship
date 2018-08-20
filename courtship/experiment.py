@@ -591,10 +591,10 @@ class FixedCourtshipTrackingExperiment(object):
     def plot_behavioral_distances_cartesian(
         self,
         behavior_name,
-        nbins=50,
-        mean_colors=None,
-        mean_linewidth=2,
-        fillcolors=None,
+        num_bins=50,
+        colors=None,
+        linewidth=2,
+        alpha=0.5,
         **kwargs
         ):
         """Generates a plot of mean male-female distances for a
@@ -609,19 +609,18 @@ class FixedCourtshipTrackingExperiment(object):
             Name of behavior to plot. This should be a valid key
             in the TrackingSummary.behaviors attribute.
 
-        nbins : int (default=50)
+        num_bins : int (default=50)
             Number of bins to use to calculate distances across.
 
-        mean_colors : list of any valid matplotlib color or None (default=None)
+        colors : list of any valid matplotlib color or None (default=None)
             Color of mean line for each group. If None, random colors will be
             chosen.
 
-        mean_linewidth : int (default=2)
+        linewidth : int (default=2)
             Linewidth of mean line.
 
-        fillcolors : list of any valid matplotlib color or None (default=None)
-            Color call to plt.fill_between(). If None, the fillcolor will be
-            the same as the mean_color set to 50\% alpha.
+        alpha : float (optional, default=0.5)
+            Alpha for fill_between().
 
         **kwargs :
             Keyword arguments to be passed to matplotlib.axes.plot().
@@ -631,29 +630,17 @@ class FixedCourtshipTrackingExperiment(object):
         -------
         fig, ax : matplotlib figure & axes handle.
         """
-        if mean_colors is None:
-            mean_colors = [
-                np.random.random(3) for i in xrange(len(self.order))
-            ]
+        if colors is None:
+            colors = ['C{}'.format(i % 10) for i in xrange(len(self.order))]
         else:
-            if len(mean_colors) != len(self.order):
+            if len(colors) != len(self.order):
                 raise AttributeError(
                     'color list must contain same number of items as' +
                     'groups.'
                 )
 
-        if fillcolors is None:
-            fillcolors = mean_colors
-            alpha = 0.5
-        else:
-            if len(fillcolors) != len(mean_colors):
-                raise AttributeError(
-                    'fillcolors must be same length as mean_colors.'
-                )
-            alpha = 1
-
-        rs = self.get_behavioral_distances(behavior_name, nbins=nbins)
-        thetas = np.linspace(-np.pi, np.pi, nbins)
+        rs = self.get_behavioral_distances(behavior_name, nbins=num_bins)
+        thetas = np.linspace(-np.pi, np.pi, num_bins)
 
         fig, ax = plt.subplots()
 
@@ -664,8 +651,8 @@ class FixedCourtshipTrackingExperiment(object):
             ax.plot(
                 thetas,
                 mean_rs,
-                color=mean_colors[i],
-                linewidth=mean_linewidth,
+                color=colors[i],
+                linewidth=linewidth,
                 zorder=1,
                 **kwargs
             )
@@ -673,7 +660,7 @@ class FixedCourtshipTrackingExperiment(object):
             ax.fill_between(
                 thetas, mean_rs - sem_rs,
                 mean_rs + sem_rs,
-                color=fillcolors[i],
+                color=colors[i],
                 alpha=alpha,
                 zorder=0
             )
