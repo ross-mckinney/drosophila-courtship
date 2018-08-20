@@ -6,6 +6,11 @@
 
 .. moduleauthor:: Ross McKinney
 """
+import numpy as np
+import pandas as pd
+
+from courtship.fly import Fly
+
 from .meta import (
     VideoMeta,
     ArenaMeta,
@@ -104,6 +109,69 @@ class FixedCourtshipTrackingSummary(TrackingSummary):
         class_str = ''
         return class_str + super(FixedCourtshipTrackingSummary, self).__str__()
 
-    def to_xlsx(self):
-        raise NotImplementedError('to_xlsx() has not been implemented yet. ' +
-            'Please save as .fcts file.')
+    def to_xlsx(self, savename):
+        """Saves this TrackingSummary as an .xlsx file.
+
+        The saved .xlsx file will have the following sheet names:
+            1. meta
+            2. male
+            3. female
+
+        Parameters
+        ----------
+        savename : string
+            Valid file path for saving this TrackingSummary.
+        """
+        meta_data = self.meta_data()
+        timestamps = meta_data.pop('video.timestamps')
+
+        meta_df = pd.DataFrame(meta_data, index=[0])
+        male_df = self.male.to_df()
+        female_df = self.female.to_df()
+
+        writer = pd.ExcelWriter(savename, engine='xlsxwriter')
+        meta_df.to_excel(writer, sheet_name='meta', index=False)
+        male_df.to_excel(writer, sheet_name='male', index=False)
+        female_df.to_excel(writer, sheet_name='female', index=False)
+
+        writer.save()
+
+    @classmethod
+    def from_xlsx(cls, filename):
+        """Opens a .xlsx file and generates a FixedCourtshipTrackingSummary 
+        from it.
+
+        Parameters
+        ----------
+        filename : string
+            Valid path to .xslx file containing data.
+        
+        Returns
+        -------
+        fcts : FixedCourtshipTrackingSummary
+        """
+        meta_df = pd.read_excel(filename, sheet_name='meta')
+        male_df = pd.read_excel(filename, sheet_name='male')
+        female_df = pd.read_excel(filename, sheet_name='female')
+
+        fcts = cls()
+        fcts.male = Fly.from_df(male_df)
+        fcts.female = Fly.from_df(female_df)
+        fcts.video.timestamps = fcts.male.timestamps
+
+        # set all meta data
+        for colname in meta_df.columns:
+            parsed_name = colname.split('.')
+            if parsed_name[0] == 'arena':
+                if parsed_name[-1] == 'vertices':
+                    setattr(fcts.arena, parsed_name[-1], meta_df[colname].values)
+                else:
+                    setattr(fcts.arena, parsed_name[-1], meta_df[colname][0])
+            elif parsed_name[0] == 'video':
+                setattr(fcts.video, parsed_name[-1], meta_df[colname][0])
+            elif parsed_name[0] == 'software:':
+                setattr(fcts.software, parsed_name[-1], meta_df[colname][0])
+            elif parsed_name[0] == 'group':
+                fcts.group = meta_df[colname][0]
+
+        return fcts

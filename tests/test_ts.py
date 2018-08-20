@@ -8,14 +8,26 @@ import pandas as pd
 
 from context import ts
 
-class TestTrackingMeta(unittest.TestCase):
-    """Tests how meta data (from Meta) is handled."""
-    def setUp(self):
-        """Instantiates a couple of sample TrackingSummary objects for use in
-        tests."""
-        self.tracking_sum = ts.TrackingSummary()
+# class TestTrackingSummarySave(unittest.TestCase):
+#     """Tests that TrackingSummary IO Save functions work as expected."""
+#     def setUp(self):
+#         """Load data."""
+#         with open('D:/test_data2/fcts2/test_01.fcts', 'rb') as f:
+#             self.summary_01 = pickle.load(f)
+    
+#     def test_to_xlsx(self):
+#         """Tests that saving to .xslx works."""
+#         self.summary_01.to_xlsx('D:/test_data2/test_01.xlsx')
+
+
+class TestTrackingSummaryRead(unittest.TestCase):
+    """Tests that TrackingSummary IO Read functions work as expected."""
+    def test_from_xlsx(self):
+        """Tests that from_xlsx works."""
+        test_summary = ts.FixedCourtshipTrackingSummary.from_xlsx(
+            'D:/test_data2/test_01.xlsx'
+        )
 
 
 if __name__ == '__main__':
-    with open('D:/test_data2/fcts2/test_01.fcts', 'rb') as f:
-        ts = pickle.load(f)
+    unittest.main(verbosity=2)
