@@ -2,7 +2,6 @@
 
 import string
 import numpy as np
-import behaviors as bstats
 
 
 def sort_and_merge(arr1, arr2, arr1_labels, arr2_label=1):
@@ -39,16 +38,15 @@ def sort_and_merge(arr1, arr2, arr1_labels, arr2_label=1):
     return merged_arr, labeled_arr
 
 
-def get_transition_probas(fcts_obj, *states):
-    """Finds the probabilies of transitioning between behavioral states.
+def get_transition_probas(summary, *states):
+    """Finds the probabilities of transitioning between behavioral states.
 
     Parameters
     ----------
-    fcts_obj : FixedCourtshipTrackingSummary object.
+    summary : FixedCourtshipTrackingSummary object.
 
     *states : list of string
-        Each member of *states should be a valid key in the fcts_obj.behaviors
-        dictionary.
+        Each member of *states should be a valid behavior name in `summary`.
 
     Returns
     -------
@@ -60,8 +58,7 @@ def get_transition_probas(fcts_obj, *states):
     """
 
     for i, state in enumerate(*states):
-        state_arr = fcts_obj.behaviors[state]
-        state_arr_boundary = bstats.bout_boundaries(state_arr)
+        state_arr_boundary = summary.male.get_behavior(state).ixs()
         state_boundary_midpoint = np.mean(state_arr_boundary, axis=1)
 
         if i == 0:
