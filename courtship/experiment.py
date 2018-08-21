@@ -132,7 +132,8 @@ class FixedCourtshipTrackingExperiment(object):
 
         if num_ts_loaded != len(summaries):
             warnings.warn(
-                'Not all .fcts files were loaded. Check that items in ' + '`groups` dict are valid.\n' +
+                'Not all .fcts files were loaded. Check that items in ' +
+                '`groups` dict are valid.\n' +
                 'N files expected: {}'.format(len(summaries)) +
                 'N files loaded:   {}'.format(num_ts_loaded),
                 UserWarning
@@ -430,7 +431,8 @@ class FixedCourtshipTrackingExperiment(object):
     def get_behavioral_distances(self,
         behavior_name,
         metric='centroid-to-centroid',
-        nbins=50
+        num_bins=50,
+        include_nonbehavors=False
         ):
         """Gets the average male-to-female distances for a specified behavior
         across all possible angular positions of the male.
@@ -450,15 +452,15 @@ class FixedCourtshipTrackingExperiment(object):
             3. 'rear-to-ellipse' -- distance between male's rear and any point
                     on an ellipse fitted to the female.
 
-        nbins : int or None
+        num_bins : int or None
             Number of bins to use for calculating the distances. Note that
-            this will split the internal (-np.pi, np.pi] into nbins.
+            this will split the internal (-np.pi, np.pi] into num_bins.
             Distances will be calculated for each bin. If None, the average
             across all bins will be taken.
 
         Returns
         -------
-        distances : dict of np.ndarray | shape [N] or [N, nbins]
+        distances : dict of np.ndarray | shape [N] or [N, num_bins]
             The average male-to-female distance (in mm) during a specified
             behavior for each group and courting pair held within this
             experiment.
@@ -486,29 +488,168 @@ class FixedCourtshipTrackingExperiment(object):
                         .as_array()
 
                 if np.sum(b_ixs) == 0:
+                    if include_nonbehavors:
+                        rs.append(np.nan)
                     continue
 
                 if metric == 'centroid-to-centroid':
                     rs.append(
                         spatial.binned_centroid_to_centroid(
-                            tracking_summary, behavior_name=behavior_name
+                            tracking_summary, behavior_name=behavior_name,
+                            bins=num_bins
                             )
                         )
                 elif metric == 'head-to-ellipse':
                     rs.append(
                         spatial.binned_head_to_ellipse(
-                            tracking_summary, behavior_name=behavior_name
+                            tracking_summary, behavior_name=behavior_name,
+                            bins=num_bins
                             )
                         )
                 else:
                     rs.append(
                         spatial.binned_rear_to_ellipse(
-                            tracking_summary, behavior_name=behavior_name
+                            tracking_summary, behavior_name=behavior_name,
+                            bins=num_bins
                             )
                         )
 
             distances[group_name] = np.asarray(rs)
         return distances
+
+    def get_behavioral_distances_peak_ratio(self,
+        behavior_name,
+        metric='centroid-to-centroid',
+        num_bins=50
+        ):
+        """Gets the ratio of the mean male-to-female distance when the male is
+        on the front half of the female versus the rear half of the female.
+
+        Parameters
+        ----------
+        behavior_name : string
+            This should be a valid behavior in each male in this Experiment.
+
+        metric : string (default='centroid-to-centroid')
+            Which distance metric should be returned. Options are as follows.
+            1. 'centroid-to-centroid' -- distance between male and female
+                    centroids.
+            2. 'head-to-ellipse' -- distance between male's head and any point
+                    on an ellipse fitted to the female.
+            3. 'rear-to-ellipse' -- distance between male's rear and any point
+                    on an ellipse fitted to the female.
+
+        num_bins : int or None
+            Number of bins to use for calculating the distances. Note that
+            this will split the internal (-np.pi, np.pi] into num_bins.
+            Distances will be calculated for each bin. If None, the average
+            across all bins will be taken.
+
+        Returns
+        -------
+        peak_distance_ratios : dict of np.array
+            Dictionary containing the peak distance ratios for each individual.
+            Keys are group names. Values are arrays, where each item in the 
+            array represents the peak distance ratio for a single individual.
+        """
+        dists = self.get_behavioral_distances(
+            behavior_name=behavior_name,
+            metric=metric,
+            num_bins=num_bins
+        )
+
+        # get the indices that represent the front half of the female.
+        thetas = np.linspace(-np.pi, np.pi, num_bins)
+        theta_high = thetas >= -np.pi/2
+        theta_low = thetas <= np.pi/2
+        thetas_front = theta_high * theta_low
+
+        ratios = {group_name: [] for group_name in self.order}
+        for group_name in self.order:
+            for ind in dists[group_name]:
+                peak_front = np.nanmax(ind[thetas_front])
+                peak_rear = np.nanmax(ind[~thetas_front])
+                peak_ratio = peak_front / peak_rear
+                if not np.isnan(peak_ratio):
+                    ratios[group_name].append(peak_front / peak_rear)
+
+        return {name: np.asarray(vals) for name, vals in ratios.iteritems()}
+
+    def get_behavioral_matrices(self,
+        behavior_name,
+        sort='descending'
+        ):
+        """Gets a matrix for each group where rows represent individuals, and
+        columns represent binary behavioral state over time.
+
+        Parameters
+        ----------
+        behavior_name : string
+            This should be a valid key in each individual's behavior
+            dictionary.
+
+        sort : string (default='descending', other options are 'ascending'
+            or None).
+            If 'descending', rows will be sorted such that individuals with
+            earlier behavioral examples are stored in rows with lower indeces.
+            If 'ascending', the returned matrix will be flipped. If None, each
+            row corresponds to the individual stored at it's respective
+            position in its group.
+
+        Returns
+        -------
+        matrices : dict of np.narrays
+            Each key is the group name, each value is an 2D np.array containing
+            binary behavioral states.
+        """
+        matrices = dict()
+        latencies = dict()
+
+        total_duration = self.video_duration_frames
+
+        for group_name in self.order:
+            group = getattr(self, group_name)
+            matrix = np.zeros(shape=(len(group), total_duration))
+            latency = []
+            for i, summary in enumerate(group):
+                behavioral_arr = summary.male.get_behavior(behavior_name) \
+                                             .as_array()
+
+                # check that the size of the behavioral array is the same
+                # as the number of columns we've allocated to the matrix.
+                b_size = behavioral_arr.size
+                if b_size > total_duration:
+                    matrix[i, :] = behavioral_arr[:total_duration]
+                elif b_size < total_duration:
+                    matrix[i, :b_size] = behavioral_arr
+                    matrix[i, b_size:] = np.nan
+                else:
+                    matrix[i, :] = behavioral_arr
+
+                # get the latency to behave; make sure there is at least one
+                # non-zero value, otherwise set this value to the last
+                # column-index of the matrix.
+                l = np.flatnonzero(behavioral_arr)
+                if l.size == 0:
+                    l = total_duration - 1
+                else:
+                    l = l[0]
+
+                latency.append(l)
+            matrices[group_name] = matrix
+            latencies[group_name] = latency
+
+        if sort is None:
+            return matrices
+
+        sorted_matrices = dict()
+        for group_name, matrix in matrices.iteritems():
+            latency = latencies[group_name]
+            ixs = np.argsort(latency)
+            if sort == 'ascending':
+                ixs = ixs[::-1]
+            sorted_matrices[group_name] = matrix[ixs, :]
+        return sorted_matrices
 
     def add_behavior_from_csv(self,
         behavior_name,
@@ -639,7 +780,7 @@ class FixedCourtshipTrackingExperiment(object):
                     'groups.'
                 )
 
-        rs = self.get_behavioral_distances(behavior_name, nbins=num_bins)
+        rs = self.get_behavioral_distances(behavior_name, num_bins=num_bins)
         thetas = np.linspace(-np.pi, np.pi, num_bins)
 
         fig, ax = plt.subplots()
@@ -703,5 +844,325 @@ class FixedCourtshipTrackingExperiment(object):
         order = np.argsort([len(n) for n in hierarchy_names])
         return [hierarchy_names[i] for i in order]
 
+    def get_behavioral_indices(self,
+        behavior_name,
+        include_nonbehavors=False,
+        method='condensed'
+        ):
+        """Gets the behavioral indices for all males contained in this
+        Experiment.
 
+        The behavioral index is the fraction of time the male spends engaging in
+        a specified behavior with a female. This can be either calculated from
+        the beginning of the video recording (method='all') or from the time the
+        male first engages in the behavior (method='condensed').
 
+        Parameters
+        ----------
+        behavior_name : string
+            Name of behavior. This should be a key within
+            FixedCourtshipTrackingSummary.behaviors.
+
+        include_nonbehavors : bool (optional, default=True)
+            Whether or not non-behavors should be included in the analysis.
+
+        method : string (optional, default='condensed')
+            Whether to start calculating the index from the start of the
+            behavioral trial ('all') or from the start of the specified
+            behavior ('condensed').
+
+        Returns
+        -------
+        behavioral_index : dictionary
+            Keys are group names, values are np.array of behavioral indices for
+            each male within its group.
+        """
+        indices = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            index = behaviors.behavioral_index(
+                    summary.male.get_behavior(behavior_name).as_array(),
+                    method=method
+                    )
+
+            if index == 0 and not include_nonbehavors:
+                continue
+            else:
+                indices[group_name].append(index)
+
+        return {name: np.asarray(vals) for name, vals in indices.iteritems()}
+
+    def get_behavioral_latencies(self,
+        behavior_name,
+        include_nonbehavors=False,
+        return_type='seconds'
+        ):
+        """Gets the behavioral latencies for all males contained in this
+        Experiment.
+
+        Parameters
+        ----------
+        behavior_name : string
+            Name of behavior. This should be a key within
+            FixedCourtshipTrackingSummary.behaviors.
+
+        include_nonbehavors : bool (optional, default=False)
+            Whether or not non-behavors should be included in the analysis.
+
+        return_type : string (optional, default='seconds')
+            Whether to return in the latencies in 'seconds' or 'frames'.
+
+        Returns
+        -------
+        behavioral_latency : dictionary
+            Keys are group names, values are np.array of behavioral latencies
+            for each male within its group.
+        """
+        latencies = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            latency = behaviors.behavioral_latency(
+                summary.male.get_behavior(behavior_name).as_array(),
+                dt=1.
+            )
+
+            if int(latency) == int(summary.video.duration_frames) \
+                and not include_nonbehavors:
+                continue
+
+            if return_type == 'seconds':
+                latency /= (1. * summary.video.duration_frames /
+                    summary.video.duration_seconds)
+            elif return_type == 'frames':
+                pass
+            else:
+                raise AttributeError(
+                    '`return_type` must be either \'frames\''+
+                    ' or \'seconds\''
+                    )
+
+            latencies[group_name].append(latency)
+
+        return {name: np.asarray(vals) for name, vals in latencies.iteritems()}
+
+    def get_behavioral_index_as_fraction_of_courtship(self,
+        behavior_name,
+        courtship_behavior_name,
+        include_nonbehavors=False
+        ):
+        """Gets the fraction of time that a male spent engaging in a specified
+        behavior as a fraction of courtship.
+
+        Parameters
+        ----------
+        behavior_name : string
+            Behavior to get index as fraction of courtship. Must be a valid
+            behavior name in all males in this experiment.
+
+        courtship_behavior_name : string
+            Name of courtship behavior. Must be a valid behavior name in all
+            males in this experiment.
+
+        include_nonbehavors : bool (optional, default=False)
+            Whether or not to include flies that did not engage in courtship in
+            the returned arrays.
+
+        Returns
+        -------
+        dictionary :
+            Keys are group names, values are np.arrays of behavioral indices for
+            each male in its group. If non-behavors are not excluded, then
+            np.nans will be returned for those non-behavors.
+        """
+        indices = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            behavior_arr = summary.male.get_behavior(behavior_name).as_array()
+            courtship_arr = summary.male.get_behavior(courtship_behavior_name) \
+                                        .as_array()
+
+            behavior_sum = np.sum(behavior_arr)
+            courtship_sum = np.sum(courtship_arr)
+
+            if courtship_sum == 0 and not include_nonbehavors:
+                continue
+
+            if courtship_sum == 0:
+                index = np.nan
+            else:
+                index = 1. * behavior_sum / courtship_sum
+
+            indices[group_name].append(index)
+
+        return {name: np.asarray(vals) for name, vals in indices.iteritems()}
+
+    def get_binned_forward_velocities(
+        self,
+        behavior_name=None,
+        num_bins=50
+        ):
+        """Gets the forward velocity components for each fly in each group at
+        all angular bins surround the female.
+
+        Parameters
+        ----------
+        behavior_name : string or None, optional (default=None)
+            This function will only calculate velocities at frames that are
+            positively classified for the specified behavior. Note that
+            `behavior_name` must be a valid behavioral key in each
+            TrackingSummary in this object. If None, velocities will be
+            calculated for all frames.
+
+        num_bins : int, optional (default=50)
+            How many bins to split the area around the female into.
+
+        Returns
+        -------
+        forward_velocities : dict of np.ndarray
+            Each key is one of the groups in this object. Each value is an
+            np.ndarray of shape [n_flies, num_bins]. Each row represents the
+            velocities for a single fly. Each column represents an angular bin
+            around the female.
+        """
+        v_fwd = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            v_fwd[group_name].append(
+                spatial.binned_forward_velocity(
+                    summary, behavior_name, num_bins).tolist()
+            )
+        return {name: np.asarray(vals) for name, vals in v_fwd.iteritems()}
+
+    def get_binned_abs_sideways_velocities(
+        self,
+        behavior_name=None,
+        num_bins=50
+        ):
+        """Gets the absolute sideways velocity components for each fly in each
+        group at all angular bins surround the female.
+
+        Parameters
+        ----------
+        behavior_name : string or None, optional (default=None)
+            This function will only calculate velocities at frames that are
+            positvely classified for the specified behavior. Note that
+            `behavior_name` must be a valid behavioral key in each
+            TrackingSummary in this object. If None, velocities will be
+            calculated for all frames.
+
+        num_bins : int, optional (default=50)
+            How many bins to split the area around the female into.
+
+        Returns
+        -------
+        abs_sideways_velocities : dict of np.ndarray
+            Each key is one of the groups in this object. Each value is an
+            np.ndarray of shape [n_flies, num_bins]. Each row represents the
+            velocities for a single fly. Each column represents an angular bin
+            around the female.
+        """
+        v_abs_sideways = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            v_abs_sideways[group_name].append(
+                spatial.binned_abs_sideways_velocity(
+                    summary, behavior_name, num_bins).tolist()
+            )
+        return {name: np.asarray(vals) for name, vals in v_abs_sideways.iteritems()}
+
+    def get_binned_sideways_velocities(
+        self,
+        behavior_name=None,
+        num_bins=50
+        ):
+        """Gets the sideways velocity components for each fly in each group at
+        all angular bins surround the female.
+
+        Parameters
+        ----------
+        behavior_name : string or None, optional (default=None)
+            This function will only calculate velocities at frames that are
+            positvely classified for the specified behavior. Note that
+            `behavior_name` must be a valid behavioral key in each
+            TrackingSummary in this object. If None, velocities will be
+            calculated for all frames.
+
+        num_bins : int, optional (default=50)
+            How many bins to split the area around the female into.
+
+        Returns
+        -------
+        sideways_velocities : dict of np.ndarray
+            Each key is one of the groups in this object. Each value is an
+            np.ndarray of shape [n_flies, num_bins]. Each row represents the
+            velocities for a single fly. Each column represents an angular bin
+            around the female.
+        """
+        v_sideways = {group_name: [] for group_name in self.order}
+        for group_name, summary in self.itergroups():
+            v_sideways[group_name].append(
+                spatial.binned_sideways_velocity(
+                    summary, behavior_name, num_bins).tolist()
+            )
+        return {name: np.asarray(vals) for name, vals in v_sideways.iteritems()}
+
+    def save_summary_csv(self, 
+        savename, 
+        behavior_names, 
+        courtship_behavior_name
+        ):
+        """Saves summary data from this experiment to the specified file."""
+        summary_df = pd.DataFrame()
+
+        group_names_arr = []
+        for group_name in self.order:
+            group_names_arr += [group_name] * len(getattr(self, group_name))
+        summary_df['group'] = group_names_arr
+
+        for behavior_name in behavior_names:
+            thetas = self.get_ang_location_summary(behavior_name, clean=False)
+            indices = self.get_behavioral_index_as_fraction_of_courtship(
+                behavior_name=behavior_name,
+                courtship_behavior_name=courtship_behavior_name,
+                include_nonbehavors=True
+            )
+            latencies = self.get_behavioral_latencies(behavior_name,
+                include_nonbehavors=True
+            )
+            distances = self.get_behavioral_distances(
+                behavior_name,
+                num_bins=None,
+                include_nonbehavors=True
+                )
+
+            thetas_list = []
+            indices_list = []
+            latencies_list = []
+            distances_list = []
+            for group_name in self.order:
+                thetas_list += thetas[group_name].tolist()
+                indices_list += indices[group_name].tolist()
+                latencies_list += latencies[group_name].tolist()
+                distances_list += distances[group_name].tolist()
+
+            summary_count = np.sum([len(getattr(self, group_name)) for group_name in self.order])
+            assert summary_count == len(thetas_list), '{} != N, {} != {}'     \
+                            .format('thetas', len(thetas_list), summary_count)
+            assert summary_count == len(indices_list), '{} != N, {} != {}'    \
+                            .format('indices', len(indices_list), summary_count)
+            assert summary_count == len(latencies_list), '{} != N, {} != {}'  \
+                            .format('latencies', len(latencies_list), summary_count)
+            assert summary_count == len(distances_list), '{} != N, {} != {}'  \
+                            .format('distances', len(distances_list), summary_count)
+
+            summary_df[behavior_name + '_thetas'] = thetas_list
+            summary_df[behavior_name + '_indices'] = indices_list
+            summary_df[behavior_name + '_latencies'] = latencies_list
+            summary_df[behavior_name + '_distances'] = distances_list
+
+        # FIXME
+        # get markov transitions between behaviors
+        # for group_name in self.order:
+        #     # this is a (N, N, M) matrix where each
+        #     transitions = markov.get_transition_matrix(self, group_name, 
+        #         behavior_names)
+        #     for rr in xrange(len(behavior_names)):
+        #         for cc in xrange(len(behavior_names)):
+        #             pass
+
+        summary_df.to_csv(savename, na_rep='NA', index=False)
