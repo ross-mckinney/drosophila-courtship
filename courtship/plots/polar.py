@@ -178,7 +178,7 @@ def polar_dot_binned(
     thetas,
     at=1,
     color='C0',
-    spread=2.,
+    spread=0.25,
     num_bins=50,
     ax=None,
     **kwargs
