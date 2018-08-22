@@ -478,7 +478,7 @@ class FixedCourtshipTrackingExperiment(object):
             raise AttributeError(message)
 
         distances = {}
-        for group_name in self.group_names:
+        for group_name in self.order:
             rs = []
             group = getattr(self, group_name)
             for tracking_summary in group:
@@ -489,7 +489,10 @@ class FixedCourtshipTrackingExperiment(object):
 
                 if np.sum(b_ixs) == 0:
                     if include_nonbehavors:
-                        rs.append(np.nan)
+                        if num_bins is None:
+                            rs.append(np.nan)
+                        else:
+                            rs.append(np.repeat(np.nan, num_bins))
                     continue
 
                 if metric == 'centroid-to-centroid':
@@ -549,7 +552,7 @@ class FixedCourtshipTrackingExperiment(object):
         -------
         peak_distance_ratios : dict of np.array
             Dictionary containing the peak distance ratios for each individual.
-            Keys are group names. Values are arrays, where each item in the 
+            Keys are group names. Values are arrays, where each item in the
             array represents the peak distance ratio for a single individual.
         """
         dists = self.get_behavioral_distances(
@@ -574,6 +577,40 @@ class FixedCourtshipTrackingExperiment(object):
                     ratios[group_name].append(peak_front / peak_rear)
 
         return {name: np.asarray(vals) for name, vals in ratios.iteritems()}
+
+    def get_behavioral_distances_peak(self,
+        behavior_name,
+        peak='front',
+        metric='centroid-to-centroid',
+        num_bins=50
+        ):
+        dists = self.get_behavioral_distances(
+            behavior_name=behavior_name,
+            metric=metric,
+            num_bins=num_bins,
+            include_nonbehavors=True
+            )
+        # get the indices that represent the front/rear half of the female.
+        thetas = np.linspace(-np.pi, np.pi, num_bins)
+        theta_high = thetas >= -np.pi/2
+        theta_low = thetas <= np.pi/2
+
+        thetas_front = theta_high * theta_low
+        thetas_rear = ~thetas_front
+
+        if peak == 'front':
+            thetas_ixs = thetas_front
+        elif peak == 'rear':
+            thetas_ixs = thetas_rear
+        else:
+            raise AttributeError('`peak` must be either \'front\' or \'rear\'')
+
+        peak_dists = {group_name: [] for group_name in self.order}
+        for group_name in self.order:
+            for ind in dists[group_name]:
+                peak_dists[group_name].append(np.nanmax(ind[thetas_ixs]))
+
+        return {name: np.asarray(vals) for name, vals in peak_dists.iteritems()}
 
     def get_behavioral_matrices(self,
         behavior_name,
@@ -1101,12 +1138,43 @@ class FixedCourtshipTrackingExperiment(object):
             )
         return {name: np.asarray(vals) for name, vals in v_sideways.iteritems()}
 
-    def save_summary_csv(self, 
-        savename, 
-        behavior_names, 
+    def save_behavioral_data(self,
+        savename,
+        behavior_names,
         courtship_behavior_name
         ):
-        """Saves summary data from this experiment to the specified file."""
+        """Saves behavioral data from this experiment to the specified file.
+
+        Behavioral data includes the following for each of the specified
+        behaviors:
+            1. Mean angular positions of male w.r.t. female across all
+            behavioral bouts.
+            2. Mean radial position of male w.r.t. female across all behavioral
+                bouts.
+            3. Behavioral index (as a fraction of courtship) for the male. This
+                is the fraction of time that the male spends engaging in the
+                specified behavior as a fraction of the time spent in courtship.
+            4. Behavioral latency for the male. How long it took the male to
+                start engaging in the specified behavior.
+
+        The courtship index and latency will also be saved for each male, as
+        will the mean courtship distance while the male is on the front half of
+        the female and rear half of the female.
+
+        Parameters
+        ----------
+        savename : string
+            Where to save file. This should be a .csv file.
+
+        behavior_names: dictionary
+            Keys should be desired names to save in column headers. Values
+            should be valid behavior names present in each male in this
+            Experiment.
+
+        courtship_behavior_name : string
+            Name of courtship behavior to use for calculating behavioral
+            indices.
+        """
         summary_df = pd.DataFrame()
 
         group_names_arr = []
@@ -1114,7 +1182,7 @@ class FixedCourtshipTrackingExperiment(object):
             group_names_arr += [group_name] * len(getattr(self, group_name))
         summary_df['group'] = group_names_arr
 
-        for behavior_name in behavior_names:
+        for save_name, behavior_name in behavior_names.iteritems():
             thetas = self.get_ang_location_summary(behavior_name, clean=False)
             indices = self.get_behavioral_index_as_fraction_of_courtship(
                 behavior_name=behavior_name,
@@ -1140,29 +1208,153 @@ class FixedCourtshipTrackingExperiment(object):
                 latencies_list += latencies[group_name].tolist()
                 distances_list += distances[group_name].tolist()
 
-            summary_count = np.sum([len(getattr(self, group_name)) for group_name in self.order])
+            summary_count = np.sum(
+                [len(getattr(self, group_name)) for group_name in self.order])
             assert summary_count == len(thetas_list), '{} != N, {} != {}'     \
                             .format('thetas', len(thetas_list), summary_count)
             assert summary_count == len(indices_list), '{} != N, {} != {}'    \
                             .format('indices', len(indices_list), summary_count)
             assert summary_count == len(latencies_list), '{} != N, {} != {}'  \
-                            .format('latencies', len(latencies_list), summary_count)
+                            .format('latencies', len(latencies_list),
+                            summary_count)
             assert summary_count == len(distances_list), '{} != N, {} != {}'  \
-                            .format('distances', len(distances_list), summary_count)
+                            .format('distances', len(distances_list),
+                            summary_count)
 
-            summary_df[behavior_name + '_thetas'] = thetas_list
-            summary_df[behavior_name + '_indices'] = indices_list
-            summary_df[behavior_name + '_latencies'] = latencies_list
-            summary_df[behavior_name + '_distances'] = distances_list
+            summary_df[save_name + '-theta'] = thetas_list
+            summary_df[save_name + '-distance'] = distances_list
+            summary_df[save_name + '-index'] = indices_list
+            summary_df[save_name + '-latency'] = latencies_list
 
-        # FIXME
-        # get markov transitions between behaviors
-        # for group_name in self.order:
-        #     # this is a (N, N, M) matrix where each
-        #     transitions = markov.get_transition_matrix(self, group_name, 
-        #         behavior_names)
-        #     for rr in xrange(len(behavior_names)):
-        #         for cc in xrange(len(behavior_names)):
-        #             pass
+        ci_all = self.get_behavioral_indices(
+            courtship_behavior_name, include_nonbehavors=True,
+            method='all')
+        ci_cond = self.get_behavioral_indices(
+            courtship_behavior_name, include_nonbehavors=True,
+            method='condensed')
+        cl = self.get_behavioral_latencies(
+            courtship_behavior_name, include_nonbehavors=True
+        )
+        dist_front = self.get_behavioral_distances_peak(
+            courtship_behavior_name,
+            peak='front')
+        dist_rear = self.get_behavioral_distances_peak(
+            courtship_behavior_name,
+            peak='rear'
+        )
+
+        ci_all_list = []
+        ci_cond_list = []
+        cl_list = []
+        dist_front_list = []
+        dist_rear_list = []
+        for group_name in self.order:
+            ci_all_list += ci_all[group_name].tolist()
+            ci_cond_list += ci_cond[group_name].tolist()
+            cl_list += cl[group_name].tolist()
+            dist_front_list += dist_front[group_name].tolist()
+            dist_rear_list += dist_rear[group_name].tolist()
+
+        assert summary_count == len(ci_all_list), '{} != N, {} != {}'     \
+                        .format('ci_all', len(ci_all_list), summary_count)
+        assert summary_count == len(ci_cond_list), '{} != N, {} != {}'    \
+                        .format('ci_cond', len(ci_cond_list), summary_count)
+        assert summary_count == len(cl_list), '{} != N, {} != {}'  \
+                        .format('cl', len(cl_list), summary_count)
+        assert summary_count == len(dist_front_list), '{} != N, {} != {}'  \
+                        .format('dist_front', len(dist_front_list),
+                        summary_count)
+        assert summary_count == len(dist_rear_list), '{} != N, {} != {}'  \
+                        .format('dist_rear', len(dist_rear_list), summary_count)
+
+        summary_df['courtship-index-all'] = ci_all_list
+        summary_df['courtship-index-cond'] = ci_cond_list
+        summary_df['courtship-latency'] = cl_list
+        summary_df['courtship-dist-front'] = dist_front_list
+        summary_df['courtship-dist-rear'] = dist_rear_list
 
         summary_df.to_csv(savename, na_rep='NA', index=False)
+
+    def save_behavioral_matrices(self,
+        savename,
+        behavior_name,
+        sort='ascending',
+        downscale_bin_size=24
+        ):
+        """Saves behavioral matrices as a .csv file.
+
+        Parameters
+        ----------
+        savename : string
+            Where to save file. Must be .csv.
+
+        behavior_name : string
+            Which behavior should matrices be saved for? Needs to be a valid
+            behavior name in all males in this Experiment.
+
+        sort : string (optional, default='ascending')
+            How to sort behavioral matrices. Can be either 'ascending' or
+            'descending'. If None, no sorting will occur.
+
+        downscale_bin_size : int
+            Size of bin to downscale each row of matrix. If you want the
+            resulting behavioral matrices to be in seconds, set this to
+            video frames per second.
+        """
+        mats = self.get_behavioral_matrices(behavior_name, sort=sort)
+
+        downscaled_mats = {}
+        downscaled_rows = 0
+        downscaled_cols = int(self.video_duration_frames / downscale_bin_size)
+
+        for gn, mat in mats.iteritems():
+            ds_mat = np.zeros(
+                shape=(mat.shape[0], downscaled_cols)
+                )
+            downscaled_rows += mat.shape[0]
+            for i in xrange(0, mat.shape[1], downscale_bin_size):
+                if (i + downscale_bin_size) <= mat.shape[1] - 1:
+                    end_ix = i + downscale_bin_size
+                else:
+                    end_ix = mat.shape[1] - 1
+                ds_mat[:, i/downscale_bin_size] = \
+                    np.median(mat[:, i:end_ix], axis=1).astype(np.int)
+
+            downscaled_mats[gn] = ds_mat
+
+        downscaled_mats_combined = np.zeros(
+            shape=(downscaled_rows, downscaled_cols))
+        current_row = 0
+        groups = []
+        for group_name in self.order:
+            mat = downscaled_mats[group_name]
+            num_rows = mat.shape[0]
+            downscaled_mats_combined[current_row:current_row+num_rows, :] = mat
+            groups += [group_name] * num_rows
+            current_row += num_rows
+
+        mat_df = pd.DataFrame(downscaled_mats_combined)
+        mat_df['groups'] = groups
+        mat_df.to_csv(savename, na_rep='NA', index=False)
+
+    def save_behavioral_transitions(self,
+        savename,
+        behavior_names,
+        behavior_order
+        ):
+        """
+        Parameters
+        ----------
+        savename : string
+
+        behavior_names : dictionary
+            Keys should be display names in output .csv file. Values should be
+            valid behavior names in each male in this Experiment.
+
+        behavior_order : list of string
+            How to order the behaviors listed in behavior_names. These should
+            be valid key names in `behavior_names`.
+        """
+        bnames = [behavior_names[key] for key in behavior_order]
+        for group_name in self.order:
+            tm = markov.get_transition_matrix(self, group_name, bnames)

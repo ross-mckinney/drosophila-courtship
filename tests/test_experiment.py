@@ -32,6 +32,10 @@ if __name__ == '__main__':
     # exp.get_binned_sideways_velocities('courtship_gt')
     # exp.get_binned_abs_sideways_velocities('courtship_gt')
 
-    exp.save_summary_csv(
-        'test_summary.csv', ['tapping', 'orienting', 'scissoring'],
-        'courtship_gt')
+    # exp.save_behavioral_data(
+    #     'test_summary.csv',
+    #     {'tap': 'tapping', 'sci': 'scissoring', 'ori': 'orienting'},
+    #     'courtship_gt')
+
+    exp.save_behavioral_matrices(
+        savename='test_matrices.csv', behavior_name='courtship_gt')
