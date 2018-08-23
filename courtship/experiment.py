@@ -1292,6 +1292,11 @@ class FixedCourtshipTrackingExperiment(object):
         ):
         """Saves behavioral matrices as a .csv file.
 
+        A behavioral matrix is a matrix where each row represents an individual
+        male and each column represents a timepoint. The entries in each (row,
+        col) pair are either 1 or 0, where the fly was either engaging in that
+        behavior at that timepoint (1) or not (0).
+
         Parameters
         ----------
         savename : string
@@ -1310,7 +1315,8 @@ class FixedCourtshipTrackingExperiment(object):
             resulting behavioral matrices to be in seconds, set this to
             video frames per second.
         """
-        mats = self.get_behavioral_matrices(behavior_name, sort=sort)
+        mats, ixs = self.get_behavioral_matrices(
+            behavior_name, sort=sort, return_sort_ixs=True)
 
         downscaled_mats = {}
         downscaled_rows = 0
@@ -1333,17 +1339,21 @@ class FixedCourtshipTrackingExperiment(object):
 
         downscaled_mats_combined = np.zeros(
             shape=(downscaled_rows, downscaled_cols))
+        fly_ixs_combined = []
+
         current_row = 0
         groups = []
         for group_name in self.order:
             mat = downscaled_mats[group_name]
             num_rows = mat.shape[0]
             downscaled_mats_combined[current_row:current_row+num_rows, :] = mat
+            fly_ixs_combined += ixs[group_name].tolist()
             groups += [group_name] * num_rows
             current_row += num_rows
 
         mat_df = pd.DataFrame(downscaled_mats_combined)
-        mat_df['groups'] = groups
+        mat_df['fly_id'] = fly_ixs_combined
+        mat_df['group'] = groups
         mat_df.to_csv(savename, na_rep='NA', index=False)
 
     def save_behavioral_transitions(self,
@@ -1365,5 +1375,67 @@ class FixedCourtshipTrackingExperiment(object):
             be valid key names in `behavior_names`.
         """
         bnames = [behavior_names[key] for key in behavior_order]
+
+        num_total_flies = np.sum(
+            [len(getattr(self, group_name)) for group_name in self.order]
+            )
+        num_transitions = len(behavior_order)
+        transitions_mat = np.zeros(shape=(num_total_flies, num_transitions**2))
+        groups = []
+
+        current_fly = 0
         for group_name in self.order:
             tm = markov.get_transition_matrix(self, group_name, bnames)
+
+            # reshape the transition matrix so that each row represents
+            # the behavioral transitions of a single fly.
+            num_flies = tm.shape[-1]
+            for i in xrange(num_flies):
+                transitions_mat[current_fly, :] = tm[:, :, i].flatten()
+                current_fly += 1
+
+            groups += [group_name] * num_flies
+
+        colnames = []
+        for n1 in behavior_order:
+            for n2 in behavior_order:
+                colnames.append('{}->{}'.format(n1, n2))
+
+        transitions_df = pd.DataFrame(transitions_mat)
+        transitions_df.columns = colnames
+        transitions_df['group'] = groups
+
+        transitions_df.to_csv(savename, na_rep='NA', index=False)
+
+    def save_behavioral_distances(self,
+        savename,
+        behavior_name='courtship_gt',
+        metric='centroid-to-centroid',
+        num_bins=50
+        ):
+        """
+        """
+        dists = self.get_behavioral_distances(
+            behavior_name=behavior_name, metric=metric, num_bins=num_bins,
+            include_nonbehavors=True
+        )
+        num_total_flies = np.sum(
+            [len(getattr(self, group_name)) for group_name in self.order]
+            )
+        dists_mat = np.zeros(shape=(num_total_flies, num_bins))
+        groups = []
+
+        current_fly_count = 0
+        for group_name in self.order:
+            num_flies_in_group = dists[group_name].shape[0]
+            dists_mat[current_fly_count:current_fly_count+num_flies_in_group, :] = \
+                dists[group_name]
+            current_fly_count += num_flies_in_group
+            groups += [group_name] * num_flies_in_group
+
+        dists_df = pd.DataFrame(dists_mat)
+        dists_df.columns = np.linspace(-np.pi, np.pi, num_bins)
+        dists_df['group'] = groups
+        dists_df.to_csv(savename, na_rep='NA', index=False)
+
+

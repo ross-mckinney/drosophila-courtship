@@ -37,5 +37,14 @@ if __name__ == '__main__':
     #     {'tap': 'tapping', 'sci': 'scissoring', 'ori': 'orienting'},
     #     'courtship_gt')
 
-    exp.save_behavioral_matrices(
-        savename='test_matrices.csv', behavior_name='courtship_gt')
+    # exp.save_behavioral_matrices(
+    #     savename='c:/users/rossm/desktop/courtship-mats.csv',
+    #     behavior_name='courtship_gt'
+    # )
+    # exp.save_behavioral_transitions(
+    #     'C:/users/rossm/desktop/transitions.csv',
+    #     {'tap': 'tapping', 'sci': 'scissoring', 'ori': 'orienting'},
+    #     ['tap', 'sci', 'ori']
+    # )
+
+    exp.save_behavioral_distances('C:/users/rossm/desktop/courtship-dists.csv')

@@ -19,6 +19,7 @@ import courtship.stats.centroid as centroid
 import courtship.stats.spatial as spatial
 import courtship.stats.transforms as transforms
 import courtship.stats.behaviors as behaviors
+import courtship.stats.markov as markov
 
 import courtship.ml.features as features
 import courtship.ml.classifiers as classifiers
