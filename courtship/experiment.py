@@ -614,7 +614,8 @@ class FixedCourtshipTrackingExperiment(object):
 
     def get_behavioral_matrices(self,
         behavior_name,
-        sort='descending'
+        sort='descending',
+        return_sort_ixs=False
         ):
         """Gets a matrix for each group where rows represent individuals, and
         columns represent binary behavioral state over time.
@@ -632,6 +633,9 @@ class FixedCourtshipTrackingExperiment(object):
             If 'ascending', the returned matrix will be flipped. If None, each
             row corresponds to the individual stored at it's respective
             position in its group.
+
+        return_sort_ixs : bool (optional, default=False)
+            Whether or not to return the sort order for the matrices.
 
         Returns
         -------
@@ -680,12 +684,17 @@ class FixedCourtshipTrackingExperiment(object):
             return matrices
 
         sorted_matrices = dict()
+        sort_ixs = dict()
         for group_name, matrix in matrices.iteritems():
             latency = latencies[group_name]
             ixs = np.argsort(latency)
             if sort == 'ascending':
                 ixs = ixs[::-1]
+
+            sort_ixs[group_name] = ixs
             sorted_matrices[group_name] = matrix[ixs, :]
+        if return_sort_ixs:
+            return sorted_matrices, sort_ixs
         return sorted_matrices
 
     def add_behavior_from_csv(self,
