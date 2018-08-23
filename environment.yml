@@ -19,3 +19,5 @@ dependencies:
         - motmot.FlyMovieFormat
         - pycircstat
         - recommonmark
+        - pyqtgraph
+        - nose
