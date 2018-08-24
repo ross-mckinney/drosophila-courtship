@@ -18,7 +18,7 @@ from courtship.stats import (
     markov,
     spatial
 )
-
+from courtship.ts import FixedCourtshipTrackingSummary
 
 class FixedCourtshipTrackingExperiment(object):
     """Class for handling experimental data.
@@ -52,17 +52,19 @@ class FixedCourtshipTrackingExperiment(object):
             self.group_names.append(group_name)
 
     @classmethod
-    def load_from_fcts(cls, data_dirs, groups=None, order=None, video_fps=24.,
-        video_duration_seconds=600., video_duration_frames=14400):
-        """Loads a FixedCourtshipTrackingExperiment from .fcts files.
+    def from_dir(cls, data_dirs, groups=None, order=None, video_fps=24.,
+        video_duration_seconds=600., video_duration_frames=14400,
+        filetype='fcts', print_load_progress=False):
+        """Loads a FixedCourtshipTrackingExperiment from TrackingSummaries
+        contained within a directory.
 
         Parameters
         ----------
         data_dirs : list of string
-            Valid path(s) to directory(ies) containing .fcts files.
+            Valid path(s) to directory(ies) containing TrackingSummary files.
 
         groups : dict or None, optional (default=None)
-            Should load in all .fcts (ts) files found in the passed dir. If None,
+            Should load in all files found in the passed dir. If None,
             then groups will be assigned based on the ts.group keys. If a dict,
             keys should be group names to load into the experiment, and values
             should be lists of possible group names.
@@ -80,6 +82,12 @@ class FixedCourtshipTrackingExperiment(object):
         video_duration_frames : int, optional (default=14400)
             Total number of frames expected in each video recording.
 
+        filetype : string (optional, default='fcts')
+            Either 'fcst' or 'xlsx'. Are we loading .fcts files or .xlsx files?
+
+        print_load_progress : bool (optional, default=False)
+            Whether or not to print current file loading.
+
         Returns
         -------
         FixedCourtshipTrackingExperiment :
@@ -89,26 +97,56 @@ class FixedCourtshipTrackingExperiment(object):
         >>> # loads in .fcts files found in '/path/to/dir1';
         >>> # groups in returned experiment will be ordered according to
         >>> # unique groups found among all ts.group attributes.
-        >>> exp = load_experiment(data_dirs=['/path/to/dir1'])
+        >>> exp = FixedCourtshipTrackingExperiment.from_dir(
+                data_dirs=['path/to/dir1', 'path/to/dir2'],
+                groups={
+                    'group1': [
+                        'possible-group1-name1',
+                        'possible-group1-name2'
+                        ],
+                    'group2': [
+                        'possible-group2-name1',
+                        'possible-group2-name2'
+                        ]
+                },
+                order=['group1', 'group2'],
+                video_fps=24.,
+                video_duration_seconds=600.,
+                video_duration_frames=14400.,
+
+            )
         """
         if type(data_dirs) is not list:
             raise AttributeError('`data_dirs` must be of type list.')
         if type(groups) is not dict:
             if groups is not None:
                 raise AttributeError('`groups` must be of type dict or None.')
+        if filetype not in ['xlsx', 'fcts']:
+            raise AttributeError(
+                '`filetype` must be either \'xlsx\' or \'fcts\'')
 
-        fcts_files = []
+        filenames = []
         for i, dir in enumerate(data_dirs):
             if not os.path.isdir(dir):
                 raise AttributeError('`data_dir` item at index {} '.format(i) +
                     'is not a valid directory path.')
-            fcts_files += sorted([os.path.join(dir, f) for f in os.listdir(dir)])
+            filenames += sorted([os.path.join(dir, f) for f in os.listdir(dir)])
 
         # load all FixedCourtshipTrackingSummary files
+        n_files = len(filenames)
         summaries, group_names = [], []
-        for fname in fcts_files:
-            with open(fname, 'rb') as f:
-                ts = pickle.load(f)
+        for i, fname in enumerate(filenames):
+            if print_load_progress:
+                print '({}/{}) loading: {}'.format(
+                    i+1, 
+                    n_files,
+                    os.path.basename(fname))
+
+            if filetype == 'fcts':
+                with open(fname, 'rb') as f:
+                    ts = pickle.load(f)
+            else:
+                ts = FixedCourtshipTrackingSummary.from_xlsx(fname)
             summaries.append(ts)
             group_names.append(ts.group)
 
