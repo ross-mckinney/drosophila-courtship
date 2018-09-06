@@ -231,7 +231,8 @@ def format_polar_axes(
     ax,
     color='lightgray',
     linestyle='-',
-    radius=1
+    radius=1,
+    **kwargs
     ):
     """Formats polar axes.
 
@@ -251,6 +252,8 @@ def format_polar_axes(
     radius : float (optional, default=1)
         Radius of circle to draw for axes.
 
+    **kwargs : kwargs to pass to ax.plot
+
     Returns
     -------
     ax : matplotlib.Axes handle
@@ -261,7 +264,8 @@ def format_polar_axes(
         [np.pi, 0],
         [radius, radius],
         color=color,
-        linestyle=linestyle
+        linestyle=linestyle,
+        **kwargs
     )
 
     # vertical axis
@@ -269,7 +273,8 @@ def format_polar_axes(
         [np.pi/2, 3*np.pi/2],
         [radius, radius],
         color=color,
-        linestyle=linestyle
+        linestyle=linestyle,
+        **kwargs
     )
 
     # circle
@@ -277,7 +282,8 @@ def format_polar_axes(
         np.linspace(0, 2*np.pi, 360),
         np.ones(360) * radius,
         color=color,
-        linestyle=linestyle
+        linestyle=linestyle,
+        **kwargs
     )
 
     ax.set_xticks([])
