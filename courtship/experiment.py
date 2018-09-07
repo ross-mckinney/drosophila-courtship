@@ -23,16 +23,38 @@ from courtship.ts import FixedCourtshipTrackingSummary
 class FixedCourtshipTrackingExperiment(object):
     """Class for handling experimental data.
 
-    This data is in the form of multiple groups of .fcts files.
-
     Parameters
     ----------
+    order : list of string
+        Order to display groups in plots. These must be valid keyword argument
+        names.
+
+    video_fps : float (optional, default=24.)
+        Frame rate of videos from which individual tracking summaries were 
+        obtained.
+
+    video_duration_seconds : float (optional, default=600.)
+        Total number of seconds in video recordings from which individual
+        tracking summaries were obtained.
+
+    video_duration_frames : int (optional, default=14400)
+        Total number of frames in video recordings from which individual
+        tracking summaries were obtained.
+
+    remove_extra_frames : bool (optional, default=True)
+        If true, each fly/tracking summary contained in this experiment will
+        be a subset of the original fly/tracking summary specified in **kwargs.
+
+    **kwargs :
+        Additional keyword arguments. Each additional keyword should specify a
+        list of FixedCourtshipTrackingSummaries.
     """
     def __init__(self,
         order=None,
         video_fps=24.,
         video_duration_seconds=600.,
         video_duration_frames=14400,
+        remove_extra_frames=True,
         **kwargs):
         self.video_fps = video_fps
         self.video_duration_seconds = video_duration_seconds
@@ -1046,13 +1068,12 @@ class FixedCourtshipTrackingExperiment(object):
                 dt=1.
             )
 
-            if int(latency) == int(summary.video.duration_frames) \
+            if int(latency) >= int(summary.video.duration_frames) \
                 and not include_nonbehavors:
                 continue
 
             if return_type == 'seconds':
-                latency /= (1. * summary.video.duration_frames /
-                    summary.video.duration_seconds)
+                latency /= float(summary.video.fps)
             elif return_type == 'frames':
                 pass
             else:
