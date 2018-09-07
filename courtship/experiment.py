@@ -48,8 +48,46 @@ class FixedCourtshipTrackingExperiment(object):
             if not isinstance(group, list):
                 raise AttributeError('All passed **kwargs must contain ' +
                 'lists.')
+            if remove_extra_frames:
+                group = self._remove_extra_frames(group)
+
             setattr(self, group_name, group)
             self.group_names.append(group_name)
+
+    def _remove_extra_frames(self, group):
+        """Removes all frames from individual flies over the number specified 
+        in __init__ (video_duration_frames).
+
+        Parameters
+        ----------
+        group : list of FixedCourtshipTrackingSummary
+        
+        Returns
+        -------
+        group : list of FixedCourtshipTrackingSummary
+        """
+        new_group = []
+        for summary in group:
+            summary.male = summary.male.subset(
+                    0, self.video_duration_frames
+                )
+            summary.female = summary.female.subset(
+                    0, self.video_duration_frames
+                )
+
+            summary.video.duration_frames = self.video_duration_frames
+            summary.video.duartion_seconds = self.video_duration_seconds
+            summary.video.timestamps = summary.video.timestamps[
+                :self.video_duration_frames
+                ]
+
+            assert summary.video.timestamps.size == \
+                    summary.video.duration_frames, \
+                    'timestamps array is incorrect size.'
+
+            new_group.append(summary)
+
+        return new_group
 
     @classmethod
     def from_dir(cls, data_dirs, groups=None, order=None, video_fps=24.,
