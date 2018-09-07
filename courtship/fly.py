@@ -342,6 +342,19 @@ class Fly(object):
             behavior_names.append(behav.name)
         return behavior_names
 
+    def subset(self, start_frame, end_frame):
+        """Returns this fly containing only a subset of it's total frames."""
+        if start_frame >= self.n_frames:
+            raise AttributeError('`start_frame` must be <= n_frames')
+
+        if end_frame >= self.n_frames:
+            end_frame = self.n_frames
+
+        fly_df = self.to_df()
+        fly_df_subset = fly_df.iloc[start_frame:end_frame, :]
+
+        return self.from_df(fly_df_subset)
+
     def from_csv(self, csv_file):
         """Allows the creation of a Fly from a csv file.
 
@@ -363,7 +376,7 @@ class Fly(object):
         Parameters
         ----------
         fly_df : pandas.DataFrame object
-            DataFrameme from which to generate Fly object.
+            DataFrame from which to generate Fly object.
 
         Returns
         -------
