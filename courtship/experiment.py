@@ -54,7 +54,7 @@ class FixedCourtshipTrackingExperiment(object):
         video_fps=24.,
         video_duration_seconds=600.,
         video_duration_frames=14400,
-        remove_extra_frames=True,
+        remove_extra_frames=False,
         **kwargs):
         self.video_fps = video_fps
         self.video_duration_seconds = video_duration_seconds
@@ -114,7 +114,7 @@ class FixedCourtshipTrackingExperiment(object):
     @classmethod
     def from_dir(cls, data_dirs, groups=None, order=None, video_fps=24.,
         video_duration_seconds=600., video_duration_frames=14400,
-        filetype='fcts', print_load_progress=False):
+        filetype='fcts', remove_extra_frames=False, print_load_progress=False):
         """Loads a FixedCourtshipTrackingExperiment from TrackingSummaries
         contained within a directory.
 
@@ -144,6 +144,10 @@ class FixedCourtshipTrackingExperiment(object):
 
         filetype : string (optional, default='fcts')
             Either 'fcst' or 'xlsx'. Are we loading .fcts files or .xlsx files?
+
+        remove_extra_frames : bool (optional, default=False)
+            Whether or not to trim frames > video_duration_frames from all
+            flies in this Experiment.
 
         print_load_progress : bool (optional, default=False)
             Whether or not to print current file loading.
@@ -242,6 +246,7 @@ class FixedCourtshipTrackingExperiment(object):
             video_fps=video_fps,
             video_duration_seconds=video_duration_seconds,
             video_duration_frames=video_duration_frames,
+            remove_extra_frames=remove_extra_frames,
             **experimental_groups
         )
 
