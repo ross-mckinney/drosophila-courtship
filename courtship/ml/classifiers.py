@@ -101,7 +101,8 @@ def list_from_csv(csv_file):
     """
 
     # load csv into pandas DataFrame
-    df = pd.read_csv(csv_file)
+    # and drop any rows that have np.nan in them
+    df = pd.read_csv(csv_file).dropna(how='all')
 
     all_data = []
 
@@ -122,6 +123,9 @@ def list_from_csv(csv_file):
                 y = np.hstack(
                     (y, np.repeat(classifications[j], stop[j] - start[j] + 1))
                     )
+
+        ix = ix.astype(np.int)
+        print 'loading: ', type(unique_file), unique_file
 
         with open(unique_file, 'rb') as f:
             fmat = pickle.load(f)
