@@ -28,7 +28,7 @@ conda env create -f environment.yml
 3. Activate environment:
 
 ~~~bash
-activate courtship  # or source activate courtship
+activate courtship  # or 'source activate courtship'
 ~~~
 
 4. Install drosophila-courtship:
@@ -36,3 +36,16 @@ activate courtship  # or source activate courtship
 ~~~bash
 python setup.py install
 ~~~
+
+
+## Documentation
+
+*Note: the documentation is currently being updated, but the API should be complete.*
+
+Using a terminal, navigate into the docs folder of this repo, then call `make`:
+
+~~~bash
+make html
+~~~
+
+This will generate an html file with all of the most recent documentation. This should be located in 'docs/source/build/index.html'.
