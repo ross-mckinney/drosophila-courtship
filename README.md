@@ -48,4 +48,9 @@ Using a terminal, navigate into the docs folder of this repo, then call `make`:
 make html
 ~~~
 
-This will generate an html file with all of the most recent documentation. This should be located in 'docs/source/build/index.html'.
+This will generate an html file with all of the most recent documentation. This should be located in 'docs/build/html/index.html'.
+
+
+## Video Requirements
+
+The GUI is optimized to work with videos that are 640x480 pixels (width x height). All videos should also be in .fmf format (FlyMovieFormat). You can run 
