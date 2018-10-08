@@ -3,7 +3,8 @@ import numpy as np
 
 from skimage.draw import (
     ellipse,
-    ellipse_perimeter
+    ellipse_perimeter,
+    line
 )
 from skimage.color import gray2rgb
 from skimage.morphology import (
@@ -110,7 +111,8 @@ class Female(QObject):
         )
         return rr, cc
 
-    def draw_female(self, color=(255, 0, 0), thickness=2):
+    def draw_female(self, color=(255, 0, 0), thickness=2, 
+        show_head_location=True):
         """Draws an ellipse perimeter around a female.
 
         Parameters
@@ -119,6 +121,8 @@ class Female(QObject):
             Color of ellipse outline.
         thickness : int
             Thickness of ellipse outline.
+        show_head_location : bool (optional, default=True)
+            If true, will draw an arrow from female's rear->head.
 
         Returns
         -------
@@ -153,4 +157,12 @@ class Female(QObject):
         )
         rr, cc = np.where(dilated_ellipse_outline)
         image[rr, cc, :] = color
+
+        if show_head_location:
+            rr, cc = line(
+                self.center[0], self.center[1],
+                self.head[0], self.head[1]
+                )
+            image[rr, cc] = color
+
         return image
