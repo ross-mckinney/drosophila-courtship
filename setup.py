@@ -14,7 +14,7 @@ REQUIRED_PACKAGES = {
     'matplotlib': 'matplotlib',
     'numpy': 'numpy',
     'pandas': 'pandas',
-    'qt': 'PyQt5',
+    'PyQt5' : 'PyQt5',
     'sklearn': 'scikit-learn',
     'skimage': 'scikit-image',
     'scipy': 'scipy',
@@ -22,7 +22,11 @@ REQUIRED_PACKAGES = {
     'sphinxcontrib': 'sphinxcontrib',
     'motmot.FlyMovieFormat': 'motmot.FlyMovieFormat',
     'pycircstat': 'pycircstat',
-    'recommonmark': 'recommonmark'
+    'recommonmark': 'recommonmark',
+    'nose': 'nose',
+    'xlsxwriter': 'xlsxwriter',
+    'xlrd': 'xlrd',
+    'pyqtgraph': 'pyqtgraph'
 }
 
 try:
@@ -42,7 +46,7 @@ def check_dependencies():
     return install
 
 if __name__ == '__main__':
-    # install_requires = check_dependencies()
+    install_requires = check_dependencies()
 
     setup(
         name=DISTNAME,
@@ -53,7 +57,7 @@ if __name__ == '__main__':
         description=DESCRIPTION,
         license=LICENSE,
         version=VERSION,
-        # install_requires=install_requires,
+        install_requires=install_requires,
         packages=[
                 'courtship',
                 'courtship.ml',
