@@ -1,4 +1,4 @@
-Tracking Summary (ts)
+ts (tracking summary)
 =====================
 
 .. automodule:: courtship.ts

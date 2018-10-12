@@ -1,4 +1,4 @@
-Experiment
+experiment
 ==========
 
 .. automodule:: courtship.experiment

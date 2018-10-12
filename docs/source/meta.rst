@@ -1,4 +1,4 @@
-Meta
+meta
 ====
 
 The meta.py file contains classes that hold meta data associated with

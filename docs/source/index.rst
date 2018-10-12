@@ -8,7 +8,7 @@ Welcome to drosophila-courtship's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: :
+   :caption: Contents :
 
    intro
    tutorial
@@ -17,8 +17,9 @@ Welcome to drosophila-courtship's documentation!
    behavior
    ts
    experiment
-
-
+   ml
+   stats
+   plots
 
 
 Indices and tables

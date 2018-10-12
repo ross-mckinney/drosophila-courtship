@@ -1,4 +1,4 @@
-Fly
+fly
 ===
 
 .. automodule:: courtship.fly

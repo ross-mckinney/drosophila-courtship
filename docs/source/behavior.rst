@@ -1,4 +1,4 @@
-Behavior
+behavior
 ========
 
 .. automodule:: courtship.behavior
