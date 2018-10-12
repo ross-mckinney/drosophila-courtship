@@ -53,4 +53,6 @@ This will generate an html file with all of the most recent documentation. This 
 
 ## Video Requirements
 
-The GUI is optimized to work with videos that are 640x480 pixels (width x height). All videos should also be in .fmf format (FlyMovieFormat). You can run 
+The GUI is optimized to work with videos that are 640x480 pixels (width x height). 
+
+All videos should also be in .fmf format (FlyMovieFormat). To convert from .mp4/.avi/.mov/etc to .fmf format, consider using the `ffmpeg2fmf` video conversion tool available from [here](http://code.astraw.com/projects/motmot/fly-movie-format.html).
