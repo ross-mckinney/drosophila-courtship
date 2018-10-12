@@ -46,7 +46,7 @@ def check_dependencies():
     return install
 
 if __name__ == '__main__':
-    install_requires = check_dependencies()
+    # install_requires = check_dependencies()
 
     setup(
         name=DISTNAME,
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         description=DESCRIPTION,
         license=LICENSE,
         version=VERSION,
-        install_requires=install_requires,
+        # install_requires=install_requires,
         packages=[
                 'courtship',
                 'courtship.ml',
