@@ -143,7 +143,7 @@ class FixedCourtshipTrackingExperiment(object):
             Total number of frames expected in each video recording.
 
         filetype : string (optional, default='fcts')
-            Either 'fcst' or 'xlsx'. Are we loading .fcts files or .xlsx files?
+            Can be one of: 'fcst', 'xlsx', or 'hdf5'.
 
         remove_extra_frames : bool (optional, default=False)
             Whether or not to trim frames > video_duration_frames from all
@@ -185,16 +185,17 @@ class FixedCourtshipTrackingExperiment(object):
         if type(groups) is not dict:
             if groups is not None:
                 raise AttributeError('`groups` must be of type dict or None.')
-        if filetype not in ['xlsx', 'fcts']:
+        if filetype not in ['xlsx', 'fcts', 'hdf5']:
             raise AttributeError(
-                '`filetype` must be either \'xlsx\' or \'fcts\'')
+                '`filetype` must be in [\'xlsx\', \'fcts\', \'hdf5\']')
 
         filenames = []
         for i, dir in enumerate(data_dirs):
             if not os.path.isdir(dir):
                 raise AttributeError('`data_dir` item at index {} '.format(i) +
                     'is not a valid directory path.')
-            filenames += sorted([os.path.join(dir, f) for f in os.listdir(dir)])
+            filenames += sorted([os.path.join(dir, f) for f in os.listdir(dir) \
+                if f.split('.')[-1] == filetype])
 
         # load all FixedCourtshipTrackingSummary files
         n_files = len(filenames)
@@ -209,8 +210,10 @@ class FixedCourtshipTrackingExperiment(object):
             if filetype == 'fcts':
                 with open(fname, 'rb') as f:
                     ts = pickle.load(f)
-            else:
+            elif filetype == 'xlsx':
                 ts = FixedCourtshipTrackingSummary.from_xlsx(fname)
+            else:
+                ts = FixedCourtshipTrackingSummary.from_hdf5(fname)
             summaries.append(ts)
             group_names.append(ts.group)
 

@@ -6,6 +6,7 @@
 
 .. moduleauthor:: Ross McKinney
 """
+import h5py
 import numpy as np
 import pandas as pd
 
@@ -136,28 +137,23 @@ class FixedCourtshipTrackingSummary(TrackingSummary):
 
         writer.save()
 
-    @classmethod
-    def from_xlsx(cls, filename):
-        """Opens a .xlsx file and generates a FixedCourtshipTrackingSummary 
-        from it.
+    def _from_dfs(self, meta_df, male_df, female_df):
+        """Loads all attributes into this object from DataFrames.
 
         Parameters
         ----------
-        filename : string
-            Valid path to .xslx file containing data.
-        
-        Returns
-        -------
-        fcts : FixedCourtshipTrackingSummary
-        """
-        meta_df = pd.read_excel(filename, sheet_name='meta')
-        male_df = pd.read_excel(filename, sheet_name='male')
-        female_df = pd.read_excel(filename, sheet_name='female')
+        meta_df : pd.DataFrame
+            Contains meta data to add to `fcts`.
 
-        fcts = cls()
-        fcts.male = Fly.from_df(male_df)
-        fcts.female = Fly.from_df(female_df)
-        fcts.video.timestamps = fcts.male.timestamps
+        male_df : pd.DataFrame
+            Contains male data to add to `fcts`.
+
+        female_df : pd.DataFrame
+            Contains female data to add to `fcts`.
+        """
+        self.male = Fly.from_df(male_df)
+        self.female = Fly.from_df(female_df)
+        self.video.timestamps = self.male.timestamps
 
         # set all meta data
         for colname in meta_df.columns:
@@ -165,17 +161,69 @@ class FixedCourtshipTrackingSummary(TrackingSummary):
             if parsed_name[0] == 'arena':
                 if parsed_name[-1] == 'vertices':
                     setattr(
-                        fcts.arena, 
+                        self.arena, 
                         parsed_name[-1], 
                         meta_df[colname].values.tolist()
                         )
                 else:
-                    setattr(fcts.arena, parsed_name[-1], meta_df[colname][0])
+                    setattr(self.arena, parsed_name[-1], meta_df[colname][0])
             elif parsed_name[0] == 'video':
-                setattr(fcts.video, parsed_name[-1], meta_df[colname][0])
-            elif parsed_name[0] == 'software:':
-                setattr(fcts.software, parsed_name[-1], meta_df[colname][0])
+                setattr(self.video, parsed_name[-1], meta_df[colname][0])
+            elif parsed_name[0] == 'software':
+                setattr(self.software, parsed_name[-1], meta_df[colname][0])
             elif parsed_name[0] == 'group':
-                fcts.group = meta_df[colname][0]
+                self.group = meta_df[colname][0]
 
+    @classmethod
+    def from_xlsx(cls, filename):
+        """Opens a .xlsx file and loads all attributes from it.
+
+        Parameters
+        ----------
+        filename : string
+            Valid path to .xslx file containing data.
+
+        Returns
+        -------
+        fcst : FixedCourtshipTrackingSummary
+        """
+        meta_df = pd.read_excel(filename, sheet_name='meta')
+        male_df = pd.read_excel(filename, sheet_name='male')
+        female_df = pd.read_excel(filename, sheet_name='female')
+
+        fcts = cls()
+        fcts._from_dfs(meta_df, male_df, female_df)
+        return fcts
+
+    @classmethod
+    def from_hdf5(cls, filename):
+        """Opens a .hdf5 file and generates a FixedCourtshipTrackingSummary.
+
+        Parameters
+        ----------
+        filename : string
+            Path to valid .hdf5 file.
+
+        Returns
+        -------
+        fcts : FixedCourtshipTrackingSummary
+        """
+        meta_df = pd.DataFrame()
+        with h5py.File(filename, 'r') as f:
+            # load meta values (these are stored as attributes in `f`)
+            for key, val in f['meta'].attrs.iteritems():
+                meta_df[key] = pd.Series([val])
+
+            meta_df.reindex_axis(sorted(meta_df.columns), axis=1)
+            male_df = pd.DataFrame(
+                f['male/df'][()],
+                columns=f['male/df'].attrs['columns']
+                )
+            female_df = pd.DataFrame(
+                f['female/df'][()],
+                columns=f['female/df'].attrs['columns']
+            )
+
+        fcts = cls()
+        fcts._from_dfs(meta_df, male_df, female_df)
         return fcts

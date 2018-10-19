@@ -2,6 +2,7 @@ name: courtship
 dependencies:
     - python=2.7
     - alabaster
+    - h5py
     - matplotlib
     - numpy
     - pandas
