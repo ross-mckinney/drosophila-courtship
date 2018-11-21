@@ -25,4 +25,5 @@ import courtship.ml.features as features
 import courtship.ml.classifiers as classifiers
 
 import courtship.plots as plots
+import courtship.plots.misc as misc_plots
 import courtship.plots.utils as plot_utils
