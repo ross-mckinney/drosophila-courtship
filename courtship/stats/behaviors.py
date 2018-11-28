@@ -513,7 +513,10 @@ def exclude_behavior_from_courtship_exp(
         TrackingSummary.
     """
     for group_name, ind in exp.itergroups():
-            _, excluded_bname = exclude_behavior_from_courtship_ts(ind)
+            _, excluded_bname = exclude_behavior_from_courtship_ts(
+                ind,
+                exclude_behavior_name=exclude_behavior
+                )
     return exp, excluded_bname
 
 
