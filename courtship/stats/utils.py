@@ -1,4 +1,6 @@
 
+from copy import deepcopy
+
 import numpy as np
 from scipy import stats
 
@@ -88,6 +90,61 @@ def is_numeric(val):
     """Checks whether a value is of a numeric type."""
     return type(val) in [int, float, long, complex]
 
+
 def is_array_like(val):
     """Checks whether a value is array-like (either numpy.ndarray or list)."""
     return type(val) in [list, np.ndarray]
+
+
+def pairwise_kruskal(data, sig=0.05, clean=True, print_results=True):
+    """Runs pairwise Kruskal tests on a given data set.
+
+    Parameters
+    ----------
+    data : dict
+        Each value should be a numpy array.
+
+    sig : float (optional, default=0.05)
+        p-value required for significance. This will be adjusted using
+        a Bonferonni correction.
+
+    clean : bool (optional, default=0.05)
+        Whether or not to clean the dataset.
+
+    Returns
+    -------
+    p-vals : dict
+        Dictionary where keys are group comparisons, and values are pairwise
+        p-values determined via scipy.kruskal.
+    """
+    data = deepcopy(data)
+
+    if clean:
+        data = clean_dataset(data)
+
+    for key in data.keys():
+        data[key] = np.asarray(data[key])
+
+    group_names = sorted(data.keys())
+    num_groups = len(group_names)
+    num_comparisons = num_groups * (num_groups-1)/2
+
+    msg = (
+        'Total number of comparisons: {}'.format(num_comparisons) +
+        ' | sig p < {}'.format(float(sig)/num_comparisons) + '\n'
+    )
+
+    p_vals = {}
+    for i in xrange(len(group_names)):
+        for j in xrange(i):
+            p = stats.kruskal(data[group_names[i]], data[group_names[j]]).pvalue
+            p_vals['{} v {}'.format(group_names[i], group_names[j])] = p
+            msg += '{} v {}: p = {}'.format(group_names[i], group_names[j], p)
+            if p < float(sig)/num_comparisons:
+                msg += '*'
+            msg += '\n'
+
+    if print_results:
+        print msg
+
+    return p_vals
