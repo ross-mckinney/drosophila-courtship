@@ -1252,6 +1252,15 @@ class FixedCourtshipTrackingExperiment(object):
             )
         return {name: np.asarray(vals) for name, vals in v_sideways.iteritems()}
 
+    def print_all_behaviors(
+        self
+        ):
+        """Prints all behaviors that are present in all male flies in this
+        experiment.
+        """
+        for group_name, summary in self.itergroups():
+            print group_name, ' : ', summary.male.list_behaviors()
+
     def save_behavioral_data(self,
         savename,
         behavior_names,
