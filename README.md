@@ -3,6 +3,8 @@
 
 **An app and python package for the tracking, classification, and analysis of fly behaviors.**
 
+![tracking gif](docs/source/_static/s1-vid.gif)
+
 ## Repo Structure
 
 <pre>
