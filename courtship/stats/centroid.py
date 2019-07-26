@@ -251,6 +251,18 @@ def change_in_area(fly, normalized=False):
 
 def total_distance_traveled(fly, pix_per_mm):
     """Finds the total distance (in mm) that a fly has traveled.
+
+    Parameters
+    ----------
+    fly : Fly object
+
+    pix_per_mm : int or float
+        How many pixels are in 1 mm of video.
+
+    Returns
+    -------
+    total_distance_traveled : float
+        How far the fly has traveled (in mm).
     """
     centroid_position = fly.body.centroid.coords_rc()
     return (
