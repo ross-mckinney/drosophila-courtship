@@ -817,8 +817,8 @@ class FixedCourtshipTrackingExperiment(object):
         for group_name, tracking_summary in self.itergroups():
             total_dists[group_name].append(
                 centroid.total_distance_traveled(
-                    tracking_summary.male, 
-                    tracking_summary.video.pix_per_mm
+                    tracking_summary.male,
+                    tracking_summary.video.pixels_per_mm
                 )
             )
         return total_dists
