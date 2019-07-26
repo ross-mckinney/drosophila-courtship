@@ -249,5 +249,15 @@ def change_in_area(fly, normalized=False):
     return d_area
 
 
+def total_distance_traveled(fly, pix_per_mm):
+    """Finds the total distance (in mm) that a fly has traveled.
+    """
+    centroid_position = fly.body.centroid.coords_rc()
+    return (
+        np.sum(np.sqrt(np.sum(np.diff(centroid_position, axis=0)**2, axis=1))) / 
+        (pix_per_mm * 1.)
+    )
+
+
 if __name__ == '__main__':
     pass
