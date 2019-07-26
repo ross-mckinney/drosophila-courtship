@@ -1,5 +1,6 @@
 # experiment.py
 
+from collections import defaultdict
 import os
 import pickle
 import warnings
@@ -802,6 +803,25 @@ class FixedCourtshipTrackingExperiment(object):
         if return_sort_ixs:
             return sorted_matrices, sort_ixs
         return sorted_matrices
+
+    def get_total_distance_traveled(self):
+        """Gets the total distance traveled (in mm) for each fly in this experiment.
+
+        Returns
+        -------
+        dict of list :
+            Dictionary containing total distances traveled for each fly in the
+            experiment.
+        """
+        total_dists = defaultdict(list)
+        for group_name, tracking_summary in self.itergroups():
+            total_dists[group_name].append(
+                centroid.total_distance_traveled(
+                    tracking_summary.male, 
+                    tracking_summary.video.pix_per_mm
+                )
+            )
+        return total_dists
 
     def add_behavior_from_csv(self,
         behavior_name,
